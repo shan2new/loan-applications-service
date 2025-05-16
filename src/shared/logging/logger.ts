@@ -1,9 +1,7 @@
 import pino from 'pino';
 
-// Configure default logger with sensible defaults
-// Avoid importing env here to prevent circular dependencies
 const pinoConfig: pino.LoggerOptions = {
-  level: process.env.LOG_LEVEL || 'info',
+  level: process.env.LOG_LEVEL ?? 'info',
   ...(process.env.NODE_ENV !== 'production'
     ? {
         transport: {
