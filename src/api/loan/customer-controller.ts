@@ -64,7 +64,7 @@ export class CustomerController {
         data: toCustomerDto(customer),
       });
     } catch (error) {
-      handleApiError(error as Error, res, this.logger);
+      handleApiError(error as Error, res, this.logger, true);
     }
   }
 
@@ -87,7 +87,7 @@ export class CustomerController {
         data: toCustomerDto(customer),
       });
     } catch (error) {
-      handleApiError(error as Error, res, this.logger);
+      handleApiError(error as Error, res, this.logger, true);
     }
   }
 
@@ -121,7 +121,7 @@ export class CustomerController {
         data: toCustomerDto(updatedCustomer),
       });
     } catch (error) {
-      handleApiError(error as Error, res, this.logger);
+      handleApiError(error as Error, res, this.logger, true);
     }
   }
 
@@ -141,7 +141,7 @@ export class CustomerController {
       await this.deleteCustomerUseCase.execute(id);
       res.status(204).end();
     } catch (error) {
-      handleApiError(error as Error, res, this.logger);
+      handleApiError(error as Error, res, this.logger, true);
     }
   }
 
@@ -170,7 +170,7 @@ export class CustomerController {
         pagination,
       });
     } catch (error) {
-      handleApiError(error as Error, res, this.logger);
+      handleApiError(error as Error, res, this.logger, true);
     }
   }
 }
