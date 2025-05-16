@@ -2,7 +2,6 @@ import { Request, Response, NextFunction } from 'express';
 import { injectable } from 'tsyringe';
 import { IAuthStrategy } from './auth-strategy.interface';
 import { createLogger } from '@shared/logging/logger';
-import { UnauthorizedError } from '@shared/errors/application-error';
 import { env } from '@shared/config/env';
 
 @injectable()
@@ -21,12 +20,22 @@ export class TokenAuthStrategy implements IAuthStrategy {
 
       if (!token) {
         this.logger.warn({ ip: req.ip }, 'Missing authentication token');
-        throw new UnauthorizedError('Authentication token is required');
+        res.status(401).json({
+          error: {
+            message: 'Authentication token is required',
+          },
+        });
+        return;
       }
 
       if (token !== env.API_ACCESS_TOKEN) {
         this.logger.warn({ ip: req.ip }, 'Invalid authentication token');
-        throw new UnauthorizedError('Invalid authentication token');
+        res.status(401).json({
+          error: {
+            message: 'Invalid authentication token',
+          },
+        });
+        return;
       }
 
       // If token is valid, continue to the next middleware

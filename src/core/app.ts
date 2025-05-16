@@ -190,7 +190,8 @@ export class Application {
    * Start the application
    */
   public start(): void {
-    const PORT = parseInt(env.PORT, 10);
+    // PORT is already a number from the env validation
+    const PORT = env.PORT;
 
     this.app.listen(PORT, () => {
       appLogger.info(`Server running on port ${PORT} in ${env.NODE_ENV} mode`);

@@ -1,10 +1,10 @@
 import pino from 'pino';
-import { env } from '../config/env';
 
-// Configure default logger
+// Configure default logger with sensible defaults
+// Avoid importing env here to prevent circular dependencies
 const pinoConfig: pino.LoggerOptions = {
-  level: env.LOG_LEVEL,
-  ...(env.NODE_ENV !== 'production'
+  level: process.env.LOG_LEVEL || 'info',
+  ...(process.env.NODE_ENV !== 'production'
     ? {
         transport: {
           target: 'pino-pretty',
@@ -24,4 +24,9 @@ export const logger = pino(pinoConfig);
 // Create a child logger with context
 export function createLogger(context: string) {
   return logger.child({ context });
+}
+
+// Update logger level if needed
+export function updateLoggerLevel(level: string): void {
+  logger.level = level;
 }

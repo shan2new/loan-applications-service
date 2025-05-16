@@ -1,3 +1,5 @@
+import { InvalidEmailError, InvalidNameError } from '@shared/errors/domain-errors';
+
 /**
  * Customer entity representing a loan applicant
  */
@@ -50,7 +52,7 @@ export class Customer {
   private validateEmail(email: string): void {
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(email)) {
-      throw new Error('Invalid email format');
+      throw new InvalidEmailError(email);
     }
   }
 
@@ -59,10 +61,10 @@ export class Customer {
    */
   private validateFullName(fullName: string): void {
     if (!fullName || fullName.trim().length < 2) {
-      throw new Error('Full name must be at least 2 characters long');
+      throw new InvalidNameError('Full name must be at least 2 characters long');
     }
     if (fullName.trim().length > 100) {
-      throw new Error('Full name must be at most 100 characters long');
+      throw new InvalidNameError('Full name must be at most 100 characters long');
     }
   }
 

@@ -1,4 +1,6 @@
 import { MoneyAmount } from '../value-objects/money-amount';
+import { InvalidTermError, InvalidInterestRateError } from '@shared/errors/domain-errors';
+import { Decimal } from '@prisma/client/runtime/library';
 
 /**
  * LoanApplication entity representing a customer's loan application
@@ -79,7 +81,7 @@ export class LoanApplication {
    */
   private validateTermMonths(termMonths: number): void {
     if (!Number.isInteger(termMonths) || termMonths < 1 || termMonths > 360) {
-      throw new Error('Loan term must be between 1 and 360 months');
+      throw new InvalidTermError(termMonths);
     }
   }
 
@@ -88,7 +90,7 @@ export class LoanApplication {
    */
   private validateInterestRate(rate: number): void {
     if (rate < 0 || rate > 100) {
-      throw new Error('Annual interest rate must be between 0 and 100 percent');
+      throw new InvalidInterestRateError(rate);
     }
   }
 
@@ -109,24 +111,36 @@ export class LoanApplication {
 
   /**
    * Create a LoanApplication instance from a database record
+   * Handles both primitive types and Prisma's Decimal type
    */
   static fromPersistence(data: {
     id: number;
     customer_id: number;
-    amount: number | string;
+    amount: number | string | Decimal;
     term_months: number;
-    annual_interest_rate: number | string;
-    monthly_payment: number | string;
-    created_at: string;
+    annual_interest_rate: number | string | Decimal;
+    monthly_payment: number | string | Decimal;
+    created_at: Date | string;
   }): LoanApplication {
+    // Convert any type to number safely
+    const toNumber = (value: number | string | Decimal): number => {
+      if (typeof value === 'number') return value;
+      if (typeof value === 'string') return Number(value);
+      // Handle Prisma Decimal type
+      return value.toNumber();
+    };
+
+    // Convert date to proper Date object
+    const createdAt = data.created_at instanceof Date ? data.created_at : new Date(data.created_at);
+
     return new LoanApplication(
       data.id,
       data.customer_id,
-      new MoneyAmount(Number(data.amount)),
+      new MoneyAmount(toNumber(data.amount)),
       data.term_months,
-      Number(data.annual_interest_rate),
-      new MoneyAmount(Number(data.monthly_payment)),
-      new Date(data.created_at),
+      toNumber(data.annual_interest_rate),
+      new MoneyAmount(toNumber(data.monthly_payment)),
+      createdAt,
     );
   }
 }

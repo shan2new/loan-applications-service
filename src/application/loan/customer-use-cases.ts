@@ -1,24 +1,12 @@
-import { z } from 'zod';
 import { Customer } from '../../domain/loan/entities/customer';
 import { ICustomerRepository } from '../../domain/loan/repositories/customer-repository.interface';
 import { validate } from '../../shared/validation/validator';
-import { ConflictError, NotFoundError } from '../../shared/errors/application-error';
+import {
+  CustomerAlreadyExistsError,
+  CustomerNotFoundByIdError,
+} from '../../shared/errors/domain-errors';
 import { createLogger } from '../../shared/logging/logger';
-
-// Input validation schemas
-const createCustomerSchema = z.object({
-  fullName: z.string().min(2).max(100),
-  email: z.string().email(),
-});
-
-const updateCustomerSchema = z
-  .object({
-    fullName: z.string().min(2).max(100).optional(),
-    email: z.string().email().optional(),
-  })
-  .refine(data => Object.keys(data).length > 0, {
-    message: 'At least one field must be provided for update',
-  });
+import { customerSchemas } from '../../shared/validation/schemas';
 
 /**
  * Use case for creating a new customer
@@ -32,12 +20,12 @@ export class CreateCustomerUseCase {
     this.logger.info('Creating new customer');
 
     // Validate input data
-    const validData = validate(createCustomerSchema, data);
+    const validData = validate(customerSchemas.create, data);
 
     // Check if customer with the same email already exists
     const existingCustomer = await this.customerRepository.findByEmail(validData.email);
     if (existingCustomer) {
-      throw new ConflictError(`Customer with email ${validData.email} already exists`);
+      throw new CustomerAlreadyExistsError(validData.email);
     }
 
     // Create and save new customer
@@ -66,19 +54,19 @@ export class UpdateCustomerUseCase {
     this.logger.info({ customerId: id }, 'Updating customer');
 
     // Validate input data
-    const validData = validate(updateCustomerSchema, data);
+    const validData = validate(customerSchemas.update, data);
 
     // Find the customer
     const customer = await this.customerRepository.findById(id);
     if (!customer) {
-      throw new NotFoundError(`Customer with ID ${id} not found`);
+      throw new CustomerNotFoundByIdError(id);
     }
 
     // Check if email is being updated and if it's already in use
     if (validData.email && validData.email !== customer.email) {
       const existingCustomer = await this.customerRepository.findByEmail(validData.email);
       if (existingCustomer && existingCustomer.id !== id) {
-        throw new ConflictError(`Customer with email ${validData.email} already exists`);
+        throw new CustomerAlreadyExistsError(validData.email);
       }
       customer.updateEmail(validData.email);
     }
@@ -109,7 +97,7 @@ export class GetCustomerByIdUseCase {
 
     const customer = await this.customerRepository.findById(id);
     if (!customer) {
-      throw new NotFoundError(`Customer with ID ${id} not found`);
+      throw new CustomerNotFoundByIdError(id);
     }
 
     return customer;
@@ -131,7 +119,7 @@ export class DeleteCustomerUseCase {
     const customer = await this.customerRepository.findById(id);
     if (!customer) {
       this.logger.warn({ customerId: id }, 'Customer not found for deletion');
-      throw new NotFoundError(`Customer with ID ${id} not found`);
+      throw new CustomerNotFoundByIdError(id);
     }
 
     await this.customerRepository.delete(id);

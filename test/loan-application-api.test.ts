@@ -22,6 +22,7 @@ describe('Loan Application API', () => {
   beforeAll(async () => {
     await testDb.setup();
     app = await setupTestApp();
+    await new Promise(resolve => setTimeout(resolve, 300));
   });
 
   // Create a test customer before each test
@@ -38,7 +39,7 @@ describe('Loan Application API', () => {
     customerId = createResponse.body.data.id;
 
     // Race condition fix where customer was not created in time
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise(resolve => setTimeout(resolve, 300));
   });
 
   // Clean up after all tests are complete

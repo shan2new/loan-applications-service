@@ -1,19 +1,14 @@
-import { z } from 'zod';
 import { LoanApplication } from '../../domain/loan/entities/loan-application';
 import { ILoanApplicationRepository } from '../../domain/loan/repositories/loan-application-repository.interface';
 import { ICustomerRepository } from '../../domain/loan/repositories/customer-repository.interface';
 import { validate } from '../../shared/validation/validator';
-import { NotFoundError } from '../../shared/errors/application-error';
 import { createLogger } from '../../shared/logging/logger';
 import { MoneyAmount } from '../../domain/loan/value-objects/money-amount';
-
-// Input validation schemas
-const createLoanApplicationSchema = z.object({
-  customerId: z.number().int().positive(),
-  amount: z.number().positive(),
-  termMonths: z.number().int().min(1).max(360),
-  annualInterestRate: z.number().min(0).max(100),
-});
+import { loanApplicationSchemas } from '../../shared/validation/schemas';
+import {
+  CustomerNotFoundByIdError,
+  LoanApplicationNotFoundError,
+} from '../../shared/errors/domain-errors';
 
 /**
  * Use case for creating a new loan application
@@ -35,12 +30,12 @@ export class CreateLoanApplicationUseCase {
     this.logger.info('Creating new loan application');
 
     // Validate input data
-    const validData = validate(createLoanApplicationSchema, data);
+    const validData = validate(loanApplicationSchemas.create, data);
 
     // Check if customer exists
     const customer = await this.customerRepository.findById(validData.customerId);
     if (!customer) {
-      throw new NotFoundError(`Customer with ID ${validData.customerId} not found`);
+      throw new CustomerNotFoundByIdError(validData.customerId);
     }
 
     // Create money amount for the loan
@@ -86,7 +81,7 @@ export class GetLoanApplicationByIdUseCase {
 
     const loanApplication = await this.loanApplicationRepository.findById(id);
     if (!loanApplication) {
-      throw new NotFoundError(`Loan application with ID ${id} not found`);
+      throw new LoanApplicationNotFoundError(id);
     }
 
     return loanApplication;
@@ -119,7 +114,7 @@ export class GetLoanApplicationsByCustomerIdUseCase {
     // Check if customer exists
     const customer = await this.customerRepository.findById(customerId);
     if (!customer) {
-      throw new NotFoundError(`Customer with ID ${customerId} not found`);
+      throw new CustomerNotFoundByIdError(customerId);
     }
 
     const page = params.page && params.page > 0 ? params.page : 1;
