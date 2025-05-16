@@ -1,29 +1,27 @@
-/**
- * Sample TypeScript file to demonstrate strict TypeScript configuration
- */
+import 'reflect-metadata'; // Required for tsyringe
+import { Application } from '@core/app';
+import { LoanModule } from '@modules/loan';
+import { createLogger } from '@shared/logging/logger';
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  age?: number;
-}
+const appLogger = createLogger('Main');
 
-function getUserInfo(user: User): string {
-  const { name, email } = user;
-  return `User ${name} can be reached at ${email}`;
-}
+// Create the application
+const app = new Application();
 
-function processUser(userId: string): void {
-  // This would normally fetch a user from a database
-  const user: User = {
-    id: userId,
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-  };
+// Register modules
+app.registerModules([LoanModule]);
 
-  const info: string = getUserInfo(user);
-  console.log(info);
-}
+// Initialize the application
+app
+  .initialize()
+  .then(() => {
+    // Start the application
+    app.start();
+    appLogger.info('Application started successfully');
+  })
+  .catch(error => {
+    appLogger.fatal({ error }, 'Failed to start application');
+    process.exit(1);
+  });
 
-export { User, getUserInfo, processUser };
+export default app.getExpressApp();
