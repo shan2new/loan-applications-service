@@ -1,4 +1,4 @@
-import { Router, Request, Response, NextFunction } from 'express';
+import { Router, Request, Response } from 'express';
 import { inject, injectable } from 'tsyringe';
 import { validate } from '@shared/validation/validator';
 import { commonSchemas } from '@shared/validation/schemas';
@@ -12,11 +12,8 @@ import { ILoanApplicationRepository } from '@domain/loan/repositories/loan-appli
 import { ICustomerRepository } from '@domain/loan/repositories/customer-repository.interface';
 import { PaginationMeta, toLoanApplicationDto } from './dtos';
 import { createLogger } from '@shared/logging/logger';
-import {
-  CustomerNotFoundByIdError,
-  LoanApplicationNotFoundError,
-} from '@shared/errors/domain-errors';
-import { ValidationError } from '@shared/errors/validation-error';
+import { BadRequestError } from '@shared/errors/application-error';
+import { handleApiError } from '@shared/errors/api-error-handler';
 
 @injectable()
 export class LoanApplicationController {
@@ -73,11 +70,7 @@ export class LoanApplicationController {
   }
 
   // Create a new loan application
-  private async createLoanApplication(
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ): Promise<void> {
+  private async createLoanApplication(req: Request, res: Response): Promise<void> {
     try {
       this.logger.debug({ body: req.body }, 'Creating loan application request received');
 
@@ -101,90 +94,34 @@ export class LoanApplicationController {
         data: toLoanApplicationDto(loanApplication),
       });
     } catch (error) {
-      // Log the error for debugging
-      this.logger.error({ error }, 'Error in createLoanApplication');
-
-      // Handle validation errors
-      if (error instanceof ValidationError) {
-        res.status(400).json({
-          error: {
-            message: error.message,
-            errors: error.errors,
-          },
-        });
-        return;
-      }
-
-      // Special handling for customer not found error to match test expectations
-      if (error instanceof CustomerNotFoundByIdError) {
-        res.status(400).json({
-          error: {
-            message: error.message,
-          },
-        });
-        return;
-      }
-
-      // Pass other errors to the global error handler
-      next(error);
+      handleApiError(error as Error, res, this.logger);
     }
   }
 
   // Get a loan application by ID
-  private async getLoanApplicationById(
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ): Promise<void> {
+  private async getLoanApplicationById(req: Request, res: Response): Promise<void> {
     try {
       const idParam = req.params.id;
       if (idParam === undefined) {
-        res.status(400).json({
-          error: {
-            message: 'Loan application ID is required',
-          },
-        });
-        return;
+        throw new BadRequestError('Loan application ID is required');
       }
 
       const id = parseInt(idParam, 10);
       if (isNaN(id) || id <= 0) {
-        res.status(400).json({
-          error: {
-            message: 'Invalid loan application ID',
-          },
-        });
-        return;
+        throw new BadRequestError('Invalid loan application ID');
       }
 
-      try {
-        const loanApplication = await this.getLoanApplicationByIdUseCase.execute(id);
-        res.status(200).json({
-          data: toLoanApplicationDto(loanApplication),
-        });
-      } catch (error) {
-        // Convert domain-specific error to expected status code
-        if (error instanceof LoanApplicationNotFoundError) {
-          res.status(404).json({
-            error: {
-              message: error.message,
-            },
-          });
-          return;
-        }
-        throw error;
-      }
+      const loanApplication = await this.getLoanApplicationByIdUseCase.execute(id);
+      res.status(200).json({
+        data: toLoanApplicationDto(loanApplication),
+      });
     } catch (error) {
-      next(error);
+      handleApiError(error as Error, res, this.logger);
     }
   }
 
   // List all loan applications
-  private async listLoanApplications(
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ): Promise<void> {
+  private async listLoanApplications(req: Request, res: Response): Promise<void> {
     try {
       const queryParams = validate(commonSchemas.pagination, req.query);
 
@@ -208,75 +145,48 @@ export class LoanApplicationController {
         pagination,
       });
     } catch (error) {
-      next(error);
+      handleApiError(error as Error, res, this.logger);
     }
   }
 
   // Get loan applications by customer ID
-  private async getLoanApplicationsByCustomerId(
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ): Promise<void> {
+  private async getLoanApplicationsByCustomerId(req: Request, res: Response): Promise<void> {
     try {
       const customerIdParam = req.params.customerId;
       if (customerIdParam === undefined) {
-        res.status(400).json({
-          error: {
-            message: 'Customer ID is required',
-          },
-        });
-        return;
+        throw new BadRequestError('Customer ID is required');
       }
 
       const customerId = parseInt(customerIdParam, 10);
       if (isNaN(customerId) || customerId <= 0) {
-        res.status(400).json({
-          error: {
-            message: 'Invalid customer ID',
-          },
-        });
-        return;
+        throw new BadRequestError('Invalid customer ID');
       }
 
-      try {
-        const queryParams = validate(commonSchemas.pagination, req.query);
+      const queryParams = validate(commonSchemas.pagination, req.query);
 
-        const paginationParams = {
-          page: queryParams.page,
-          pageSize: queryParams.pageSize,
-        };
+      const paginationParams = {
+        page: queryParams.page,
+        pageSize: queryParams.pageSize,
+      };
 
-        const result = await this.getLoanApplicationsByCustomerIdUseCase.execute(
-          customerId,
-          paginationParams,
-        );
+      const result = await this.getLoanApplicationsByCustomerIdUseCase.execute(
+        customerId,
+        paginationParams,
+      );
 
-        const pagination: PaginationMeta = {
-          page: result.page,
-          pageSize: result.pageSize,
-          total: result.total,
-          totalPages: result.totalPages,
-        };
+      const pagination: PaginationMeta = {
+        page: result.page,
+        pageSize: result.pageSize,
+        total: result.total,
+        totalPages: result.totalPages,
+      };
 
-        res.status(200).json({
-          data: result.loanApplications.map(toLoanApplicationDto),
-          pagination,
-        });
-      } catch (error) {
-        // Special handling for customer not found error
-        if (error instanceof CustomerNotFoundByIdError) {
-          res.status(404).json({
-            error: {
-              message: error.message,
-            },
-          });
-          return;
-        }
-        throw error;
-      }
+      res.status(200).json({
+        data: result.loanApplications.map(toLoanApplicationDto),
+        pagination,
+      });
     } catch (error) {
-      next(error);
+      handleApiError(error as Error, res, this.logger);
     }
   }
 }
