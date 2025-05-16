@@ -1,2 +1,10 @@
-npx lint-staged
-npx pre-commit run --all-files
+#!/bin/sh
+# This is a simplified pre-commit hook that works with Husky v10.0.0
+
+# Get the Node.js executable path from the current environment
+NODE_PATH=$(command -v node)
+NPM_PATH=$(command -v npm)
+NPX_PATH=$(command -v npx)
+
+# Run lint-staged with the full path to npx
+$NPX_PATH lint-staged
