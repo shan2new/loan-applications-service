@@ -5,10 +5,10 @@ import { InvalidEmailError, InvalidNameError } from '@shared/errors/domain-error
  */
 export class Customer {
   constructor(
-    private _id: number | null,
+    private readonly _id: number | null,
     private _fullName: string,
     private _email: string,
-    private _createdAt: Date = new Date(),
+    private readonly _createdAt: Date = new Date(),
   ) {
     this.validateEmail(_email);
     this.validateFullName(_fullName);

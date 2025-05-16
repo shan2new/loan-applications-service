@@ -14,11 +14,11 @@ import {
  * Use case for creating a new loan application
  */
 export class CreateLoanApplicationUseCase {
-  private logger = createLogger('CreateLoanApplicationUseCase');
+  private readonly logger = createLogger('CreateLoanApplicationUseCase');
 
   constructor(
-    private loanApplicationRepository: ILoanApplicationRepository,
-    private customerRepository: ICustomerRepository,
+    private readonly loanApplicationRepository: ILoanApplicationRepository,
+    private readonly customerRepository: ICustomerRepository,
   ) {}
 
   async execute(data: {
@@ -72,9 +72,9 @@ export class CreateLoanApplicationUseCase {
  * Use case for getting a loan application by ID
  */
 export class GetLoanApplicationByIdUseCase {
-  private logger = createLogger('GetLoanApplicationByIdUseCase');
+  private readonly logger = createLogger('GetLoanApplicationByIdUseCase');
 
-  constructor(private loanApplicationRepository: ILoanApplicationRepository) {}
+  constructor(private readonly loanApplicationRepository: ILoanApplicationRepository) {}
 
   async execute(id: number): Promise<LoanApplication> {
     this.logger.info({ loanApplicationId: id }, 'Getting loan application by ID');
@@ -92,11 +92,11 @@ export class GetLoanApplicationByIdUseCase {
  * Use case for getting loan applications by customer ID
  */
 export class GetLoanApplicationsByCustomerIdUseCase {
-  private logger = createLogger('GetLoanApplicationsByCustomerIdUseCase');
+  private readonly logger = createLogger('GetLoanApplicationsByCustomerIdUseCase');
 
   constructor(
-    private loanApplicationRepository: ILoanApplicationRepository,
-    private customerRepository: ICustomerRepository,
+    private readonly loanApplicationRepository: ILoanApplicationRepository,
+    private readonly customerRepository: ICustomerRepository,
   ) {}
 
   async execute(
@@ -143,9 +143,9 @@ export class GetLoanApplicationsByCustomerIdUseCase {
  * Use case for listing all loan applications with pagination
  */
 export class ListLoanApplicationsUseCase {
-  private logger = createLogger('ListLoanApplicationsUseCase');
+  private readonly logger = createLogger('ListLoanApplicationsUseCase');
 
-  constructor(private loanApplicationRepository: ILoanApplicationRepository) {}
+  constructor(private readonly loanApplicationRepository: ILoanApplicationRepository) {}
 
   async execute(
     params: { page?: number | undefined; pageSize?: number | undefined } = {},

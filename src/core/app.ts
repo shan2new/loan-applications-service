@@ -8,9 +8,8 @@ import { errorHandler } from '@shared/errors/error-middleware';
 import { ModuleRegistry, IModule } from '@core/module';
 import { PluginRegistry } from '@core/plugin';
 import { env } from '@shared/config/env';
-import { globalAuthMiddleware } from '@shared/auth';
+import { TokenAuthStrategy, AuthService, globalAuthMiddleware } from '@shared/auth';
 import { container } from 'tsyringe';
-import { TokenAuthStrategy, AuthService } from '@shared/auth';
 import pinoHttp from 'pino-http';
 
 const appLogger = createLogger('App');

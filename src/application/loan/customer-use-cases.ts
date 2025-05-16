@@ -12,9 +12,9 @@ import { customerSchemas } from '../../shared/validation/schemas';
  * Use case for creating a new customer
  */
 export class CreateCustomerUseCase {
-  private logger = createLogger('CreateCustomerUseCase');
+  private readonly logger = createLogger('CreateCustomerUseCase');
 
-  constructor(private customerRepository: ICustomerRepository) {}
+  constructor(private readonly customerRepository: ICustomerRepository) {}
 
   async execute(data: { fullName: string; email: string }): Promise<Customer> {
     this.logger.info('Creating new customer');
@@ -46,9 +46,9 @@ export class CreateCustomerUseCase {
  * Use case for updating an existing customer
  */
 export class UpdateCustomerUseCase {
-  private logger = createLogger('UpdateCustomerUseCase');
+  private readonly logger = createLogger('UpdateCustomerUseCase');
 
-  constructor(private customerRepository: ICustomerRepository) {}
+  constructor(private readonly customerRepository: ICustomerRepository) {}
 
   async execute(id: number, data: { fullName?: string; email?: string }): Promise<Customer> {
     this.logger.info({ customerId: id }, 'Updating customer');
@@ -88,9 +88,9 @@ export class UpdateCustomerUseCase {
  * Use case for getting a customer by ID
  */
 export class GetCustomerByIdUseCase {
-  private logger = createLogger('GetCustomerByIdUseCase');
+  private readonly logger = createLogger('GetCustomerByIdUseCase');
 
-  constructor(private customerRepository: ICustomerRepository) {}
+  constructor(private readonly customerRepository: ICustomerRepository) {}
 
   async execute(id: number): Promise<Customer> {
     this.logger.info({ customerId: id }, 'Getting customer by ID');
@@ -130,9 +130,9 @@ export class DeleteCustomerUseCase {
  * Use case for listing customers with pagination
  */
 export class ListCustomersUseCase {
-  private logger = createLogger('ListCustomersUseCase');
+  private readonly logger = createLogger('ListCustomersUseCase');
 
-  constructor(private customerRepository: ICustomerRepository) {}
+  constructor(private readonly customerRepository: ICustomerRepository) {}
 
   async execute(
     params: { page?: number | undefined; pageSize?: number | undefined } = {},

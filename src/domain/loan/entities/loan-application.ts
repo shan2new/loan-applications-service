@@ -2,18 +2,20 @@ import { MoneyAmount } from '../value-objects/money-amount';
 import { InvalidTermError, InvalidInterestRateError } from '@shared/errors/domain-errors';
 import { Decimal } from '@prisma/client/runtime/library';
 
+type NumberField = number | Decimal | string;
+
 /**
  * LoanApplication entity representing a customer's loan application
  */
 export class LoanApplication {
   constructor(
-    private _id: number | null,
-    private _customerId: number,
-    private _amount: MoneyAmount,
-    private _termMonths: number,
-    private _annualInterestRate: number,
-    private _monthlyPayment: MoneyAmount,
-    private _createdAt: Date = new Date(),
+    private readonly _id: number | null,
+    private readonly _customerId: number,
+    private readonly _amount: MoneyAmount,
+    private readonly _termMonths: number,
+    private readonly _annualInterestRate: number,
+    private readonly _monthlyPayment: MoneyAmount,
+    private readonly _createdAt: Date = new Date(),
   ) {
     this.validateTermMonths(_termMonths);
     this.validateInterestRate(_annualInterestRate);
@@ -116,14 +118,14 @@ export class LoanApplication {
   static fromPersistence(data: {
     id: number;
     customer_id: number;
-    amount: number | string | Decimal;
+    amount: NumberField;
     term_months: number;
-    annual_interest_rate: number | string | Decimal;
-    monthly_payment: number | string | Decimal;
+    annual_interest_rate: NumberField;
+    monthly_payment: NumberField;
     created_at: Date | string;
   }): LoanApplication {
     // Convert any type to number safely
-    const toNumber = (value: number | string | Decimal): number => {
+    const toNumber = (value: NumberField): number => {
       if (typeof value === 'number') return value;
       if (typeof value === 'string') return Number(value);
       // Handle Prisma Decimal type
