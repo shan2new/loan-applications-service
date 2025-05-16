@@ -1,4 +1,4 @@
-import { Router, Request, Response, NextFunction } from 'express';
+import { Router, Request, Response } from 'express';
 import { inject, injectable } from 'tsyringe';
 import { validate } from '@shared/validation/validator';
 import { customerSchemas, commonSchemas } from '@shared/validation/schemas';
@@ -13,7 +13,7 @@ import { ICustomerRepository } from '@domain/loan/repositories/customer-reposito
 import { PaginationMeta, toCustomerDto } from './dtos';
 import { createLogger } from '@shared/logging/logger';
 import { BadRequestError } from '@shared/errors/application-error';
-import { CustomerNotFoundByIdError } from '@shared/errors/domain-errors';
+import { handleApiError } from '@shared/errors/api-error-handler';
 
 @injectable()
 export class CustomerController {
@@ -55,7 +55,7 @@ export class CustomerController {
   }
 
   // Create a new customer
-  private async createCustomer(req: Request, res: Response, next: NextFunction): Promise<void> {
+  private async createCustomer(req: Request, res: Response): Promise<void> {
     try {
       const data = validate(customerSchemas.create, req.body);
       const customer = await this.createCustomerUseCase.execute(data);
@@ -64,159 +64,89 @@ export class CustomerController {
         data: toCustomerDto(customer),
       });
     } catch (error) {
-      next(error);
+      handleApiError(error as Error, res, this.logger);
     }
   }
 
   // Get a customer by ID
-  private async getCustomerById(req: Request, res: Response, next: NextFunction): Promise<void> {
+  private async getCustomerById(req: Request, res: Response): Promise<void> {
     try {
-      try {
-        const idParam = req.params.id;
-        if (idParam === undefined) {
-          res.status(400).json({
-            error: {
-              message: 'Customer ID is required',
-            },
-          });
-          return;
-        }
-
-        const id = parseInt(idParam, 10);
-        if (isNaN(id) || id <= 0) {
-          res.status(400).json({
-            error: {
-              message: 'Invalid customer ID',
-            },
-          });
-          return;
-        }
-
-        const customer = await this.getCustomerByIdUseCase.execute(id);
-
-        res.status(200).json({
-          data: toCustomerDto(customer),
-        });
-      } catch (validationError) {
-        if (validationError instanceof BadRequestError) {
-          res.status(400).json({
-            error: {
-              message: validationError.message,
-            },
-          });
-          return;
-        }
-        if (validationError instanceof CustomerNotFoundByIdError) {
-          res.status(404).json({
-            error: {
-              message: validationError.message,
-            },
-          });
-          return;
-        }
-        throw validationError;
+      const idParam = req.params.id;
+      if (idParam === undefined) {
+        throw new BadRequestError('Customer ID is required');
       }
+
+      const id = parseInt(idParam, 10);
+      if (isNaN(id) || id <= 0) {
+        throw new BadRequestError('Invalid customer ID');
+      }
+
+      const customer = await this.getCustomerByIdUseCase.execute(id);
+
+      res.status(200).json({
+        data: toCustomerDto(customer),
+      });
     } catch (error) {
-      next(error);
+      handleApiError(error as Error, res, this.logger);
     }
   }
 
   // Update a customer
-  private async updateCustomer(req: Request, res: Response, next: NextFunction): Promise<void> {
+  private async updateCustomer(req: Request, res: Response): Promise<void> {
     try {
-      try {
-        const idParam = req.params.id;
-        if (idParam === undefined) {
-          throw new BadRequestError('Customer ID is required');
-        }
-
-        const id = parseInt(idParam, 10);
-        if (isNaN(id) || id <= 0) {
-          throw new BadRequestError('Invalid customer ID');
-        }
-
-        const validData = validate(customerSchemas.update, req.body);
-
-        // Create a properly typed object for the use case
-        const updateData: { fullName?: string; email?: string } = {};
-        if ('fullName' in validData && validData.fullName !== undefined) {
-          updateData.fullName = validData.fullName;
-        }
-        if ('email' in validData && validData.email !== undefined) {
-          updateData.email = validData.email;
-        }
-
-        const updatedCustomer = await this.updateCustomerUseCase.execute(id, updateData);
-
-        res.status(200).json({
-          data: toCustomerDto(updatedCustomer),
-        });
-      } catch (validationError) {
-        if (validationError instanceof BadRequestError) {
-          res.status(400).json({
-            error: {
-              message: validationError.message,
-            },
-          });
-          return;
-        }
-        if (validationError instanceof CustomerNotFoundByIdError) {
-          res.status(404).json({
-            error: {
-              message: validationError.message,
-            },
-          });
-          return;
-        }
-        throw new BadRequestError('Invalid request data');
+      const idParam = req.params.id;
+      if (idParam === undefined) {
+        throw new BadRequestError('Customer ID is required');
       }
+
+      const id = parseInt(idParam, 10);
+      if (isNaN(id) || id <= 0) {
+        throw new BadRequestError('Invalid customer ID');
+      }
+
+      const validData = validate(customerSchemas.update, req.body);
+
+      // Create a properly typed object for the use case
+      const updateData: { fullName?: string; email?: string } = {};
+      if ('fullName' in validData && validData.fullName !== undefined) {
+        updateData.fullName = validData.fullName;
+      }
+      if ('email' in validData && validData.email !== undefined) {
+        updateData.email = validData.email;
+      }
+
+      const updatedCustomer = await this.updateCustomerUseCase.execute(id, updateData);
+
+      res.status(200).json({
+        data: toCustomerDto(updatedCustomer),
+      });
     } catch (error) {
-      next(error);
+      handleApiError(error as Error, res, this.logger);
     }
   }
 
   // Delete a customer
-  private async deleteCustomer(req: Request, res: Response, next: NextFunction): Promise<void> {
+  private async deleteCustomer(req: Request, res: Response): Promise<void> {
     try {
-      try {
-        const idParam = req.params.id;
-        if (idParam === undefined) {
-          throw new BadRequestError('Customer ID is required');
-        }
+      const idParam = req.params.id;
+      if (idParam === undefined) {
+        throw new BadRequestError('Customer ID is required');
+      }
 
-        const id = parseInt(idParam, 10);
-        if (isNaN(id) || id <= 0) {
-          throw new BadRequestError('Invalid customer ID');
-        }
-
-        await this.deleteCustomerUseCase.execute(id);
-        res.status(204).end();
-      } catch (validationError) {
-        if (validationError instanceof BadRequestError) {
-          res.status(400).json({
-            error: {
-              message: validationError.message,
-            },
-          });
-          return;
-        }
-        if (validationError instanceof CustomerNotFoundByIdError) {
-          res.status(404).json({
-            error: {
-              message: validationError.message,
-            },
-          });
-          return;
-        }
+      const id = parseInt(idParam, 10);
+      if (isNaN(id) || id <= 0) {
         throw new BadRequestError('Invalid customer ID');
       }
+
+      await this.deleteCustomerUseCase.execute(id);
+      res.status(204).end();
     } catch (error) {
-      next(error);
+      handleApiError(error as Error, res, this.logger);
     }
   }
 
   // List all customers
-  private async listCustomers(req: Request, res: Response, next: NextFunction): Promise<void> {
+  private async listCustomers(req: Request, res: Response): Promise<void> {
     try {
       const queryParams = validate(commonSchemas.pagination, req.query);
 
@@ -240,7 +170,7 @@ export class CustomerController {
         pagination,
       });
     } catch (error) {
-      next(error);
+      handleApiError(error as Error, res, this.logger);
     }
   }
 }
