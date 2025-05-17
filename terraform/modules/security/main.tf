@@ -143,7 +143,7 @@ resource "aws_iam_role_policy_attachment" "eb_ec2_ssm_managed_instance" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
-# Allow additional SSM session permissions for debugging
+# Additional SSM Session Manager permissions
 resource "aws_iam_role_policy" "eb_ec2_ssm_session" {
   name = "${var.prefix}-eb-ec2-ssm-session-policy"
   role = aws_iam_role.eb_ec2.id

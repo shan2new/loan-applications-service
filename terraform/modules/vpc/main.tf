@@ -118,3 +118,76 @@ resource "aws_route_table_association" "private" {
   subnet_id      = aws_subnet.private[count.index].id
   route_table_id = aws_route_table.private.id
 }
+
+# VPC Endpoints for SSM (to enable Session Manager)
+resource "aws_vpc_endpoint" "ssm" {
+  vpc_id            = aws_vpc.main.id
+  service_name      = "com.amazonaws.${data.aws_region.current.name}.ssm"
+  vpc_endpoint_type = "Interface"
+  subnet_ids        = aws_subnet.private.*.id
+  security_group_ids = [aws_security_group.vpce.id]
+  private_dns_enabled = true
+
+  tags = {
+    Name        = "${var.prefix}-ssm-endpoint"
+    Environment = var.environment
+  }
+}
+
+resource "aws_vpc_endpoint" "ssm_messages" {
+  vpc_id            = aws_vpc.main.id
+  service_name      = "com.amazonaws.${data.aws_region.current.name}.ssmmessages"
+  vpc_endpoint_type = "Interface"
+  subnet_ids        = aws_subnet.private.*.id
+  security_group_ids = [aws_security_group.vpce.id]
+  private_dns_enabled = true
+
+  tags = {
+    Name        = "${var.prefix}-ssmmessages-endpoint"
+    Environment = var.environment
+  }
+}
+
+resource "aws_vpc_endpoint" "ec2_messages" {
+  vpc_id            = aws_vpc.main.id
+  service_name      = "com.amazonaws.${data.aws_region.current.name}.ec2messages"
+  vpc_endpoint_type = "Interface"
+  subnet_ids        = aws_subnet.private.*.id
+  security_group_ids = [aws_security_group.vpce.id]
+  private_dns_enabled = true
+
+  tags = {
+    Name        = "${var.prefix}-ec2messages-endpoint"
+    Environment = var.environment
+  }
+}
+
+# Security group for VPC endpoints
+resource "aws_security_group" "vpce" {
+  name        = "${var.prefix}-vpce-sg"
+  description = "Security group for VPC endpoints"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [aws_vpc.main.cidr_block]
+    description = "Allow HTTPS from VPC CIDR"
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name        = "${var.prefix}-vpce-sg"
+    Environment = var.environment
+  }
+}
+
+# Add a data source to get the current AWS region
+data "aws_region" "current" {}
