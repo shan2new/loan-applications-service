@@ -5,7 +5,11 @@ phases:
     runtime-versions:
       nodejs: 20
     commands:
-      - echo Installing dependencies...
+      - 'echo Installing dependencies...'
+      - 'node --version'
+      - 'npm --version'
+      - 'echo Checking system compatibility...'
+      - 'ldd --version | head -n 1 || true'
       - 'pwd'
       - 'ls -la'
       - 'echo DEBUG: Parent directory structure'
@@ -13,7 +17,7 @@ phases:
       - 'echo DEBUG: Root directory structure'
       - 'ls -la /'
       - 'echo Continuing with installation...'
-      - 'npm ci'
+      - 'npm install'
   pre_build:
     commands:
       - 'echo Running tests and linting...'
@@ -27,7 +31,7 @@ phases:
       - 'mkdir -p .ebextensions .platform'
       - 'cp -r .ebextensions .platform dist/'
       - 'cp package.json package-lock.json Procfile .env.example dist/'
-      - 'cd dist && npm ci --production && cd ..'
+      - 'cd dist && npm install --production && cd ..'
 artifacts:
   files:
     - 'dist/**/*'
