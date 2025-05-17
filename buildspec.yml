@@ -5,41 +5,23 @@ phases:
     runtime-versions:
       nodejs: 20
     commands:
-      - 'echo Installing dependencies...'
-      - 'node --version'
-      - 'npm --version'
-      - 'npm install'
-      - 'npm install -g prisma'
-
-  pre_build:
-    commands:
-      - 'echo Running prisma generate...'
-      - 'npx prisma generate'
-      - 'echo Running linting...'
-      - 'npm run lint || echo "Linting warnings ignored"'
+      - npm ci
 
   build:
     commands:
-      - 'echo Building the application...'
-      - 'npm run build'
-
-  post_build:
-    commands:
-      - 'echo Build completed on `date`'
-      - 'echo Ensuring Prisma client directory exists...'
-      - 'mkdir -p node_modules/.prisma/client'
+      - npm run build
+      - npm run lint
+      - npx prisma generate
 
 artifacts:
   files:
-    - 'node_modules/**/*'
     - 'dist/**/*'
+    - 'node_modules/**/*'
     - 'prisma/**/*'
-    - '.platform/**/*'
-    - '.ebextensions/**/*'
+    - 'Procfile'
     - 'package.json'
     - 'package-lock.json'
-    - 'Procfile'
-    - '.npmrc'
+    - '.env*'
   base-directory: '.'
   discard-paths: no
 

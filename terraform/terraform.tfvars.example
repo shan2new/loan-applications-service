@@ -1,0 +1,28 @@
+# Environment
+environment = "dev"
+aws_region  = "ap-south-1"
+
+# Service
+service_name = "service_name"
+
+# VPC
+vpc_cidr             = "10.0.0.0/16"
+public_subnet_cidrs  = ["10.0.101.0/24", "10.0.102.0/24"]
+private_subnet_cidrs = ["10.0.1.0/24", "10.0.2.0/24"]
+availability_zones   = ["ap-south-1a", "ap-south-1b"]
+
+# Database
+db_instance_class    = "db.t3.small"
+db_allocated_storage = 20
+db_name              = "db_name"
+db_username          = "db_username"
+
+# Elastic Beanstalk
+eb_solution_stack_name = "64bit Amazon Linux 2023 v6.1.0 running Node.js 20"
+eb_instance_type       = "t3.small"
+eb_min_instances       = 1
+eb_max_instances       = 2
+
+# CI/CD Pipeline
+github_repository = "repo_name"
+github_branch     = "main"
