@@ -338,3 +338,90 @@ createPlugin(() => new CreditCardModule(), {
   author: 'Your Name',
 });
 ```
+
+## Debugging Private EC2 Instances with SSM
+
+This project is configured with AWS Systems Manager (SSM) for debugging Elastic Beanstalk instances in private subnets.
+
+### Prerequisites
+
+1. Install the AWS CLI and Session Manager plugin:
+
+   ```bash
+   # macOS (with Homebrew)
+   brew install awscli
+   brew install session-manager-plugin
+
+   # Linux
+   curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/linux_64bit/session-manager-plugin.rpm" -o "session-manager-plugin.rpm"
+   sudo yum install -y session-manager-plugin.rpm
+   ```
+
+2. Ensure you have the appropriate IAM permissions to use SSM.
+
+### Connecting to Instances
+
+1. List the available EC2 instances in your environment:
+
+   ```bash
+   aws ec2 describe-instances \
+     --filters "Name=tag:elasticbeanstalk:environment-name,Values=loan-apps-svc-dev" \
+     --query "Reservations[*].Instances[*].[InstanceId,PrivateIpAddress,Tags[?Key=='Name'].Value|[0]]" \
+     --output table
+   ```
+
+2. Start an SSM session with a specific instance:
+
+   ```bash
+   aws ssm start-session --target i-instanceid
+   ```
+
+3. Execute a specific command on the instance:
+   ```bash
+   aws ssm start-session \
+     --target i-instanceid \
+     --document-name AWS-RunShellScript \
+     --parameters 'commands=["cd /var/app/current && npm list"]'
+   ```
+
+### Common Debugging Commands
+
+Once connected to an instance via SSM, you can use these commands for debugging:
+
+```bash
+# View application logs
+cd /var/log/eb-activity.log
+tail -f /var/log/eb-activity.log
+
+# View Node.js application logs
+cd /var/log/nodejs
+cat nodejs.log
+
+# Check the deployed application
+cd /var/app/current
+ls -la
+
+# Check environment variables
+printenv | grep -v AWS_ | grep -v SECRET
+
+# Test database connectivity
+nc -zv $(echo $DATABASE_URL | cut -d'@' -f2 | cut -d':' -f1) $(echo $DATABASE_URL | cut -d':' -f4 | cut -d'/' -f1)
+
+# Check if the application is running
+ps aux | grep node
+
+# View SSM agent logs
+tail -f /var/log/amazon/ssm/amazon-ssm-agent.log
+```
+
+### Viewing Extended Debug Logs
+
+Custom debug logs are automatically collected and can be viewed:
+
+```bash
+# View the comprehensive debug log
+cat /var/log/eb-debug.log
+
+# Check if SSM agent is installed and running properly
+systemctl status amazon-ssm-agent
+```

@@ -137,6 +137,45 @@ resource "aws_iam_role_policy" "eb_ec2_ssm" {
   })
 }
 
+# Policy for Elastic Beanstalk EC2 instances to use Systems Manager
+resource "aws_iam_role_policy_attachment" "eb_ec2_ssm_managed_instance" {
+  role       = aws_iam_role.eb_ec2.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+# Allow additional SSM session permissions for debugging
+resource "aws_iam_role_policy" "eb_ec2_ssm_session" {
+  name = "${var.prefix}-eb-ec2-ssm-session-policy"
+  role = aws_iam_role.eb_ec2.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "ssm:StartSession",
+          "ssm:TerminateSession",
+          "ssm:ResumeSession",
+          "ssm:DescribeSessions",
+          "ssm:GetConnectionStatus"
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      },
+      {
+        Action = [
+          "ssmmessages:CreateControlChannel",
+          "ssmmessages:CreateDataChannel",
+          "ssmmessages:OpenControlChannel",
+          "ssmmessages:OpenDataChannel"
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      }
+    ]
+  })
+}
+
 # IAM Role for CodePipeline
 resource "aws_iam_role" "codepipeline" {
   name = "${var.prefix}-codepipeline-role"

@@ -18,9 +18,9 @@ artifacts:
     - 'dist/**/*'
     - 'node_modules/**/*'
     - 'prisma/**/*'
-    - 'Procfile'
     - 'package.json'
     - 'package-lock.json'
+    - 'tsconfig.json'
     - '.env*'
   base-directory: '.'
   discard-paths: no
