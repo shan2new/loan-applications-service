@@ -3,7 +3,7 @@ environment = "dev"
 aws_region  = "ap-south-1"
 
 # Service
-service_name = "service_name"
+service_name = "loan-apps-svc"
 
 # VPC
 vpc_cidr             = "10.0.0.0/16"
@@ -14,8 +14,8 @@ availability_zones   = ["ap-south-1a", "ap-south-1b"]
 # Database
 db_instance_class    = "db.t3.small"
 db_allocated_storage = 20
-db_name              = "db_name"
-db_username          = "db_username"
+db_name              = "loandb"
+db_username          = "dbadmin"
 
 # Elastic Beanstalk
 eb_solution_stack_name = "64bit Amazon Linux 2023 v6.1.0 running Node.js 20"
@@ -24,5 +24,9 @@ eb_min_instances       = 1
 eb_max_instances       = 2
 
 # CI/CD Pipeline
-github_repository = "repo_name"
+github_repository = "your-username/loan-applications-service"
 github_branch     = "main"
+codestar_connection_arn = "sample"
+
+# Application configuration
+api_access_token = "your-secure-api-token-at-least-32-characters"

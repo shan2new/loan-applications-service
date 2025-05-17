@@ -15,6 +15,19 @@ resource "aws_elastic_beanstalk_application" "app" {
   }
 }
 
+# Store API access token in SSM Parameter Store
+resource "aws_ssm_parameter" "api_access_token" {
+  name        = "/${var.prefix}/${var.environment}/api-access-token"
+  description = "API access token for the application"
+  type        = "SecureString"
+  value       = var.api_access_token == null ? "default-token-for-${var.environment}-replace-in-console" : var.api_access_token
+
+  tags = {
+    Name        = "${var.prefix}-api-access-token"
+    Environment = var.environment
+  }
+}
+
 # Elastic Beanstalk Environment
 resource "aws_elastic_beanstalk_environment" "env" {
   name                = "${var.prefix}-${var.environment}"

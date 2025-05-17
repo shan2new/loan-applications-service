@@ -111,3 +111,10 @@ variable "codestar_connection_arn" {
   type        = string
   default     = null
 }
+
+variable "api_access_token" {
+  description = "API access token for the application (will be stored in SSM Parameter Store)"
+  type        = string
+  default     = null
+  sensitive   = true
+}

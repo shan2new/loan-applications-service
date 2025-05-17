@@ -110,8 +110,11 @@ module "eb" {
   # Environment variables - provided directly to the application
   env_vars = {
     NODE_ENV     = var.environment
-    DATABASE_URL = module.rds.connection_string_ssm_parameter_name
+    DATABASE_URL = "#{aws:ssm:${module.rds.connection_string_ssm_parameter_name}}"
   }
+
+  # API access token
+  api_access_token = var.api_access_token
 }
 
 # IAM Role for Elastic Beanstalk service

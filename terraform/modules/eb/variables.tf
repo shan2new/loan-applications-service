@@ -79,3 +79,10 @@ variable "env_vars" {
   type        = map(string)
   default     = {}
 }
+
+variable "api_access_token" {
+  description = "API access token for the application"
+  type        = string
+  default     = null
+  sensitive   = true
+}
