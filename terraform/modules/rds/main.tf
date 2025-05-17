@@ -140,7 +140,7 @@ resource "aws_ssm_parameter" "db_connection_string" {
   name        = "/${var.prefix}/${var.environment}/database-url"
   description = "PostgreSQL connection string for the application"
   type        = "SecureString"
-  value       = "postgresql://${var.db_username}:${urlencode(random_password.db_password.result)}@${aws_db_instance.postgresql.endpoint}/${var.db_name}"
+  value       = "postgresql://${var.db_username}:${urlencode(random_password.db_password.result)}@${aws_db_instance.postgresql.endpoint}/${var.db_name}?schema=public"
 
   tags = {
     Name        = "${var.prefix}-db-connection-string"

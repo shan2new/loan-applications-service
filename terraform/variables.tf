@@ -118,3 +118,15 @@ variable "api_access_token" {
   default     = null
   sensitive   = true
 }
+
+variable "eb_port" {
+  description = "Port for the application to run on"
+  type        = string
+  default     = "8080"
+}
+
+variable "log_level" {
+  description = "Log level for the application"
+  type        = string
+  default     = "info"
+}

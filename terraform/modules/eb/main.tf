@@ -28,6 +28,31 @@ resource "aws_ssm_parameter" "api_access_token" {
   }
 }
 
+# Store other application configuration in SSM
+resource "aws_ssm_parameter" "log_level" {
+  name        = "/${var.prefix}/${var.environment}/log-level"
+  description = "Log level for the application"
+  type        = "String"
+  value       = var.log_level
+
+  tags = {
+    Name        = "${var.prefix}-log-level"
+    Environment = var.environment
+  }
+}
+
+resource "aws_ssm_parameter" "port" {
+  name        = "/${var.prefix}/${var.environment}/port"
+  description = "Port for the application"
+  type        = "String"
+  value       = var.port
+
+  tags = {
+    Name        = "${var.prefix}-port"
+    Environment = var.environment
+  }
+}
+
 # Elastic Beanstalk Environment
 resource "aws_elastic_beanstalk_environment" "env" {
   name                = "${var.prefix}-${var.environment}"

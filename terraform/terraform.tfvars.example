@@ -30,3 +30,6 @@ codestar_connection_arn = "sample"
 
 # Application configuration
 api_access_token = "your-secure-api-token-at-least-32-characters"
+eb_port = "8080"
+log_level = "info"
+
