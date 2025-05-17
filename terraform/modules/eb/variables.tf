@@ -80,21 +80,4 @@ variable "env_vars" {
   default     = {}
 }
 
-variable "api_access_token" {
-  description = "API access token for the application"
-  type        = string
-  default     = null
-  sensitive   = true
-}
-
-variable "log_level" {
-  description = "Log level for the application"
-  type        = string
-  default     = "info"
-}
-
-variable "port" {
-  description = "Port for the application"
-  type        = string
-  default     = "8080"
-}
+// These variables are now passed directly to the env_vars map in the main module

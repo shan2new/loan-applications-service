@@ -109,15 +109,12 @@ module "eb" {
 
   # Environment variables - provided directly to the application
   env_vars = {
-    NODE_ENV     = var.environment
+    NODE_ENV         = var.environment
+    PORT             = var.eb_port
+    LOG_LEVEL        = var.log_level
+    API_ACCESS_TOKEN = var.api_access_token
+    DATABASE_URL     = "postgresql://${var.db_username}:${urlencode(local.db_creds.password)}@${module.rds.endpoint}/${var.db_name}?schema=public"
   }
-
-  # API access token
-  api_access_token = var.api_access_token
-
-  # Application configuration
-  port = var.eb_port
-  log_level = var.log_level
 }
 
 # IAM Role for Elastic Beanstalk service
