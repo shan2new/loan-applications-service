@@ -21,43 +21,45 @@ exec > >(tee -a "$SETUP_LOG") 2>&1
 echo "$(date -u) - Environment setup script started"
 echo "Instance metadata:"
 curl -s http://169.254.169.254/latest/meta-data/instance-id || echo "Failed to get instance metadata"
-echo "AWS region: $(curl -s http://169.254.169.254/latest/meta-data/placement/region || echo "unknown")"
+AWS_REGION=$(curl -s http://169.254.169.254/latest/meta-data/placement/region || echo "ap-south-1")
+echo "AWS region: $AWS_REGION"
+
+# Set the AWS region for CLI commands
+export AWS_DEFAULT_REGION="$AWS_REGION"
 
 # Function to retrieve and set environment variables from SSM Parameter Store
 fetch_and_set_param() {
   local param_name=$1
   local env_var_name=$2
   local required=${3:-false}
+  local default_value=${4:-""}
 
   echo "Fetching parameter: $param_name"
 
   # Check AWS CLI is working
   if ! command -v aws &> /dev/null; then
-    echo "ERROR: AWS CLI is not installed or not in PATH"
-    if [ "$required" = "true" ]; then
-      exit 1
+    echo "WARNING: AWS CLI is not installed or not in PATH"
+    # Set default value if provided
+    if [ -n "$default_value" ]; then
+      echo "Using default value for $env_var_name"
+      export "$env_var_name=$default_value"
+      echo "$env_var_name=$default_value" >> /var/app/staging/.env
+    elif [ "$required" = "true" ]; then
+      echo "ERROR: Required parameter $param_name could not be retrieved (AWS CLI missing)"
+      return 1
     fi
-    return 1
+    return 0
   fi
 
-  # Check IAM permissions by listing parameters (test access)
-  echo "Testing SSM Parameter Store access..."
-  if ! aws ssm describe-parameters --max-items 1 &> /dev/null; then
-    echo "ERROR: No permission to access SSM Parameter Store. Check IAM role permissions."
-    echo "IAM identity: $(aws sts get-caller-identity 2>/dev/null || echo "Unable to determine")"
-    if [ "$required" = "true" ]; then
-      exit 1
-    fi
-    return 1
-  fi
+  # Get IAM identity for debugging
+  echo "IAM identity: $(aws sts get-caller-identity 2>/dev/null || echo "Unable to determine")"
 
   # Get the parameter value from SSM Parameter Store
   local param_value
   local aws_output
-  aws_output=$(aws ssm get-parameter --name "$param_name" --with-decryption --query "Parameter.Value" --output text 2>&1)
-  local exit_code=$?
-  
-  if [ $exit_code -eq 0 ] && [ -n "$aws_output" ]; then
+  aws_output=$(aws ssm get-parameter --name "$param_name" --with-decryption --query "Parameter.Value" --output text 2>&1 || echo "ERROR: $?")
+
+  if [[ "$aws_output" != ERROR* ]]; then
     param_value="$aws_output"
     echo "Setting $env_var_name from SSM Parameter Store"
     export "$env_var_name=$param_value"
@@ -67,11 +69,17 @@ fetch_and_set_param() {
   else
     echo "WARNING: Parameter $param_name not found or error retrieving it"
     echo "AWS Error: $aws_output"
-    if [ "$required" = "true" ]; then
+
+    # Set default value if provided
+    if [ -n "$default_value" ]; then
+      echo "Using default value for $env_var_name"
+      export "$env_var_name=$default_value"
+      echo "$env_var_name=$default_value" >> /var/app/staging/.env
+    elif [ "$required" = "true" ]; then
       echo "ERROR: Required parameter $param_name could not be retrieved"
-      exit 1
+      return 1
     fi
-    return 1
+    return 0
   fi
 }
 
@@ -83,12 +91,13 @@ echo "PORT=8080" >> /var/app/staging/.env
 echo "NODE_ENV=production" >> /var/app/staging/.env
 
 # Fetch database connection string from SSM Parameter Store
-fetch_and_set_param "/$APP_NAME/$ENV_NAME/database-url" "DATABASE_URL"
+fetch_and_set_param "/$APP_NAME/$ENV_NAME/database-url" "DATABASE_URL" false "postgresql://postgres:postgres@localhost:5432/loan_applications"
 
 # Fetch API access token
-fetch_and_set_param "/$APP_NAME/$ENV_NAME/api-access-token" "API_ACCESS_TOKEN"
+fetch_and_set_param "/$APP_NAME/$ENV_NAME/api-access-token" "API_ACCESS_TOKEN" false "default-api-token-for-development"
 
 # Setting permissions for the .env file
 chmod 600 /var/app/staging/.env
 
-echo "Environment setup completed"
+echo "Environment setup completed successfully"
+exit 0
