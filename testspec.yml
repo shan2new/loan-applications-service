@@ -27,14 +27,6 @@ phases:
       - 'echo Checking for test reports...'
       - 'ls -la ./test-results/junit || echo "No test reports found"'
 
-reports:
-  jest-reports:
-    files:
-      - 'junit.xml'
-      - 'test-results/junit/junit.xml'
-    base-directory: '.'
-    file-format: 'JUNITXML'
-
 artifacts:
   files:
     - 'junit.xml'
