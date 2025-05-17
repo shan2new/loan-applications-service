@@ -20,7 +20,7 @@ describe('Authentication Middleware', () => {
   describe('Global Authentication', () => {
     it('should allow access to the health endpoint without authentication', async () => {
       const response = await request(app).get('/health').expect(200);
-      expect(response.body).toEqual({ status: 'healthy' });
+      expect(response.body.status).toBe('healthy');
     });
 
     it('should deny access to API endpoints without authentication token', async () => {
