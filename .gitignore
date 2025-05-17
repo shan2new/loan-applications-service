@@ -51,3 +51,6 @@ crash.log
 .aws-sam/
 samconfig.toml
 packaged.yaml
+
+
+coverage/
