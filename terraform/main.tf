@@ -110,7 +110,7 @@ module "eb" {
   # Environment variables - provided directly to the application
   env_vars = {
     NODE_ENV     = var.environment
-    DATABASE_URL = "postgresql://${local.db_creds.username}:${local.db_creds.password}@${local.db_creds.host}:${local.db_creds.port}/${local.db_creds.dbname}"
+    DATABASE_URL = module.rds.connection_string_ssm_parameter_name
   }
 }
 

@@ -32,3 +32,8 @@ output "connection_string_ssm_parameter" {
   description = "Name of the SSM parameter containing the database connection string"
   value       = aws_ssm_parameter.db_connection_string.name
 }
+
+output "connection_string_ssm_parameter_name" {
+  description = "Name of the SSM parameter for use in environment variables"
+  value       = aws_ssm_parameter.db_connection_string.name
+}
