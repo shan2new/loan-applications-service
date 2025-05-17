@@ -1,3 +1,4 @@
+/* eslint-env node */
 /** @type {import('ts-jest').JestConfigWithTsJest} */
 module.exports = {
   preset: 'ts-jest',
@@ -23,4 +24,21 @@ module.exports = {
     ],
   },
   testRunner: 'jest-circus/runner',
+  reporters: [
+    'default',
+    [
+      'jest-junit',
+      {
+        outputDirectory: './test-results/junit',
+        outputName: 'junit.xml',
+        classNameTemplate: '{classname}',
+        titleTemplate: '{title}',
+        ancestorSeparator: ' › ',
+        suiteNameTemplate: '{filename}',
+      },
+    ],
+  ],
+  collectCoverage: true,
+  coverageDirectory: './coverage',
+  coverageReporters: ['json', 'lcov', 'text', 'clover'],
 };

@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "NODE_ENV=test jest",
+    "test": "NODE_ENV=test jest --silent --colors",
     "test:watch": "NODE_ENV=test jest --watch",
     "test:coverage": "NODE_ENV=test jest --coverage",
+    "test:ci": "NODE_ENV=test jest --ci --reporters=default --reporters=jest-junit",
     "lint": "eslint ./src --ext .ts",
     "lint:fix": "eslint ./src --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
@@ -44,7 +45,8 @@
     "tsc-alias": "1.8.16",
     "tsconfig-paths": "4.2.0",
     "typescript": "^5.8.3",
-    "typescript-eslint": "8.32.1"
+    "typescript-eslint": "8.32.1",
+    "jest-junit": "16.0.0"
   },
   "lint-staged": {
     "*.ts": [
