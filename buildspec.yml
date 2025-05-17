@@ -6,31 +6,28 @@ phases:
       nodejs: 20
     commands:
       - echo Installing dependencies...
-      - pwd
-      - ls -la
-      - echo "DEBUG: Parent directory structure"
-      - ls -la ..
-      - echo "DEBUG: Root directory structure"
-      - ls -la /
-      - echo "Continuing with installation..."
-      - npm ci
-
+      - 'pwd'
+      - 'ls -la'
+      - 'echo DEBUG: Parent directory structure'
+      - 'ls -la ..'
+      - 'echo DEBUG: Root directory structure'
+      - 'ls -la /'
+      - 'echo Continuing with installation...'
+      - 'npm ci'
   pre_build:
     commands:
-      - echo Running tests and linting...
-      - npm run lint || true
-      - npm test || echo "Tests skipped due to missing test database"
-
+      - 'echo Running tests and linting...'
+      - 'npm run lint || true'
+      - 'npm test || echo Tests skipped due to missing test database'
   build:
     commands:
-      - echo Building the application...
-      - npm run build
-      - echo Preparing package for Elastic Beanstalk...
-      - mkdir -p .ebextensions .platform
-      - cp -r .ebextensions .platform dist/
-      - cp package.json package-lock.json Procfile .env.example dist/
-      - cd dist && npm ci --production && cd ..
-
+      - 'echo Building the application...'
+      - 'npm run build'
+      - 'echo Preparing package for Elastic Beanstalk...'
+      - 'mkdir -p .ebextensions .platform'
+      - 'cp -r .ebextensions .platform dist/'
+      - 'cp package.json package-lock.json Procfile .env.example dist/'
+      - 'cd dist && npm ci --production && cd ..'
 artifacts:
   files:
     - 'dist/**/*'
@@ -42,7 +39,6 @@ artifacts:
     - '.env.example'
   base-directory: '.'
   discard-paths: no
-
 cache:
   paths:
     - 'node_modules/**/*'
