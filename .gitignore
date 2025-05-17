@@ -54,3 +54,5 @@ packaged.yaml
 
 
 coverage/
+*.lock.hcl
+tfplan
