@@ -5,49 +5,43 @@ phases:
     runtime-versions:
       nodejs: 20
     commands:
-      - 'echo Installing dependencies for build...'
+      - 'echo Installing dependencies...'
       - 'node --version'
       - 'npm --version'
-      - 'echo Checking system compatibility...'
-      - 'ldd --version | head -n 1 || true'
-      - 'pwd'
-      - 'ls -la'
-      - 'echo DEBUG: Parent directory structure'
-      - 'ls -la ..'
-      - 'echo DEBUG: Root directory structure'
-      - 'ls -la /'
-      - 'echo Continuing with installation...'
       - 'npm install'
+      - 'npm install -g prisma'
 
   pre_build:
     commands:
-      - 'echo Preparing build environment...'
-      - 'echo Build started at `date`'
+      - 'echo Running prisma generate...'
+      - 'npx prisma generate'
+      - 'echo Running linting...'
+      - 'npm run lint || echo "Linting warnings ignored"'
 
   build:
     commands:
       - 'echo Building the application...'
       - 'npm run build'
-      - 'echo Preparing package for Elastic Beanstalk...'
-      - 'mkdir -p .ebextensions .platform'
-      - 'cp -r .ebextensions .platform dist/'
-      - 'cp package.json package-lock.json Procfile .env.example dist/'
-      - 'cd dist && npm install --production && cd ..'
 
   post_build:
     commands:
-      - 'echo Build completed at `date`'
-      - 'echo Packaging complete'
+      - 'echo Build completed on `date`'
+      - 'echo Creating deployment package...'
+      - 'mkdir -p node_modules/.prisma/client'
+      # Bundle node_modules
+      - 'cp -R node_modules .ebextensions .platform prisma dist package.json package-lock.json Procfile .npmrc $CODEBUILD_SRC_DIR/'
 
 artifacts:
   files:
+    - 'node_modules/**/*'
     - 'dist/**/*'
-    - '.ebextensions/**/*'
+    - 'prisma/**/*'
     - '.platform/**/*'
+    - '.ebextensions/**/*'
     - 'package.json'
     - 'package-lock.json'
     - 'Procfile'
-    - '.env.example'
+    - '.npmrc'
   base-directory: '.'
   discard-paths: no
 
