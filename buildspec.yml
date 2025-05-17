@@ -26,10 +26,8 @@ phases:
   post_build:
     commands:
       - 'echo Build completed on `date`'
-      - 'echo Creating deployment package...'
+      - 'echo Ensuring Prisma client directory exists...'
       - 'mkdir -p node_modules/.prisma/client'
-      # Bundle node_modules
-      - 'cp -R node_modules .ebextensions .platform prisma dist package.json package-lock.json Procfile .npmrc $CODEBUILD_SRC_DIR/'
 
 artifacts:
   files:
