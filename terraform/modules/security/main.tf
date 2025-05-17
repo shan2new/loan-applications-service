@@ -176,6 +176,44 @@ resource "aws_iam_role_policy" "eb_ec2_ssm_session" {
   })
 }
 
+# Add S3 access policy for Elastic Beanstalk EC2 instances
+resource "aws_iam_role_policy" "eb_ec2_s3" {
+  name = "${var.prefix}-eb-ec2-s3-policy"
+  role = aws_iam_role.eb_ec2.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:Get*",
+          "s3:List*",
+          "s3:PutObject",
+          "s3:PutObjectAcl",
+          "s3:DeleteObject"
+        ]
+        Resource = [
+          "arn:aws:s3:::elasticbeanstalk-*",
+          "arn:aws:s3:::elasticbeanstalk-*/*"
+        ]
+      }
+    ]
+  })
+}
+
+# Add Elastic Beanstalk Web Tier policy (includes S3 permissions)
+resource "aws_iam_role_policy_attachment" "eb_ec2_web_tier" {
+  role       = aws_iam_role.eb_ec2.name
+  policy_arn = "arn:aws:iam::aws:policy/AWSElasticBeanstalkWebTier"
+}
+
+# Add Elastic Beanstalk Multicontainer Docker policy (more comprehensive permissions)
+resource "aws_iam_role_policy_attachment" "eb_ec2_multicontainer" {
+  role       = aws_iam_role.eb_ec2.name
+  policy_arn = "arn:aws:iam::aws:policy/AWSElasticBeanstalkMulticontainerDocker"
+}
+
 # IAM Role for CodePipeline
 resource "aws_iam_role" "codepipeline" {
   name = "${var.prefix}-codepipeline-role"

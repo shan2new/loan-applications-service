@@ -42,3 +42,19 @@ output "github_connection_arn" {
   description = "ARN of the GitHub connection (externally managed)"
   value       = "arn:aws:codeconnections:ap-south-1:119030453285:connection/b20e04a5-1756-44d1-b79d-f797b728ae4d"
 }
+
+# Output variables
+output "elastic_beanstalk_url" {
+  description = "URL of the Elastic Beanstalk environment"
+  value       = module.eb.environment_endpoint
+}
+
+output "eb_instance_profile" {
+  description = "IAM instance profile for EC2 instances in Elastic Beanstalk"
+  value       = module.security.eb_instance_profile_name
+}
+
+output "eb_instance_role" {
+  description = "IAM role for EC2 instances in Elastic Beanstalk"
+  value       = "loan-applications-service-${var.environment}-eb-ec2-role"
+}

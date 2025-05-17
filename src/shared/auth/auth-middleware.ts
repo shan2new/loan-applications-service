@@ -19,7 +19,7 @@ export function authenticate(strategyName?: string) {
  */
 export function globalAuthMiddleware(req: Request, res: Response, next: NextFunction): void {
   // List of paths that don't require authentication
-  const publicPaths = ['/health', '/api/health'];
+  const publicPaths = ['/health', '/health-basic', '/api/health'];
 
   // Skip authentication for public paths
   if (publicPaths.some(path => req.path === path)) {
