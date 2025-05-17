@@ -1,6 +1,9 @@
 {
   "name": "loan-applications-service",
   "version": "1.0.0",
+  "engines": {
+    "node": "20.x"
+  },
   "main": "index.js",
   "scripts": {
     "test": "NODE_ENV=test jest --silent --colors",
