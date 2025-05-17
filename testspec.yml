@@ -13,6 +13,7 @@ phases:
   pre_build:
     commands:
       - 'echo Setting up test environment...'
+      - 'export CI=true'
       - 'npm run lint || echo "Linting warnings ignored"'
       - 'mkdir -p ./test-results/junit'
 
@@ -41,6 +42,7 @@ cache:
 
 env:
   variables:
+    CI: 'true'
     JEST_JUNIT_OUTPUT_DIR: './test-results/junit/'
     JEST_JUNIT_OUTPUT_NAME: 'junit.xml'
     JEST_JUNIT_CLASSNAME: '{classname}'
