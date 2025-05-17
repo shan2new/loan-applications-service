@@ -113,7 +113,7 @@ module "eb" {
     PORT             = var.eb_port
     LOG_LEVEL        = var.log_level
     API_ACCESS_TOKEN = var.api_access_token
-    DATABASE_URL     = "postgresql://${var.db_username}:${urlencode(local.db_creds.password)}@${module.rds.endpoint}/${var.db_name}?schema=public"
+    DATABASE_URL     = var.db_url
   }
 }
 

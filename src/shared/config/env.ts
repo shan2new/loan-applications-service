@@ -8,7 +8,7 @@ dotenvFlow.config();
 // Environment variables validation schema
 const envSchema = z.object({
   // Application settings
-  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  NODE_ENV: z.enum(['dev', 'test', 'production']).default('dev'),
   PORT: z
     .string()
     .refine(val => !isNaN(parseInt(val, 10)), {

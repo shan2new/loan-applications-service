@@ -130,3 +130,10 @@ variable "log_level" {
   type        = string
   default     = "info"
 }
+
+variable "db_url" {
+  description = "The full database URL including credentials"
+  type        = string
+  sensitive   = true
+  default     = null
+}

@@ -132,7 +132,7 @@ describe('Error Middleware', () => {
       const originalNodeEnv = process.env.NODE_ENV;
 
       // Test in development mode first (shows actual error message)
-      process.env.NODE_ENV = 'development';
+      process.env.NODE_ENV = 'dev';
 
       const devResponse = await request(app).get('/test/unhandled-error').expect(500);
 

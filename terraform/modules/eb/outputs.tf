@@ -1,15 +1,15 @@
 output "application_name" {
-  description = "Name of the Elastic Beanstalk application"
+  description = "Name of the Elastic Beanstalk Application"
   value       = aws_elastic_beanstalk_application.app.name
 }
 
 output "environment_name" {
-  description = "Name of the Elastic Beanstalk environment"
+  description = "Name of the Elastic Beanstalk Environment"
   value       = aws_elastic_beanstalk_environment.env.name
 }
 
 output "environment_id" {
-  description = "ID of the Elastic Beanstalk environment"
+  description = "ID of the Elastic Beanstalk Environment"
   value       = aws_elastic_beanstalk_environment.env.id
 }
 
