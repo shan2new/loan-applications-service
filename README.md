@@ -1,5 +1,15 @@
 # Loan Applications Service
 
+A Node.js backend service for processing loan applications with secure API endpoints.
+
+## Features
+
+- REST API for loan applications
+- PostgreSQL database integration
+- Secure authentication
+- Monthly payment calculation
+- CI/CD pipeline with AWS CodePipeline
+
 ## Overview
 
 This service manages loan applications processing.
@@ -66,6 +76,53 @@ npm run build
 # Run in production mode
 npm run start
 ```
+
+## AWS Deployment
+
+### Infrastructure as Code
+
+This project uses Terraform to provision AWS infrastructure:
+
+1. Set up the Terraform backend:
+
+```bash
+cd terraform
+aws s3 mb s3://loan-application-terraform-state
+aws dynamodb create-table \
+  --table-name terraform-lock \
+  --attribute-definitions AttributeName=LockID,AttributeType=S \
+  --key-schema AttributeName=LockID,KeyType=HASH \
+  --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5
+```
+
+2. Initialize Terraform:
+
+```bash
+terraform init
+```
+
+3. Configure deployment variables:
+
+```bash
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your configuration
+```
+
+4. Deploy the infrastructure:
+
+```bash
+terraform apply
+```
+
+### CI/CD Pipeline
+
+The CI/CD pipeline is automatically set up with the Terraform deployment. It includes:
+
+1. Source stage: Pull code from GitHub
+2. Build stage: Run tests and build the application
+3. Deploy stage: Deploy to Elastic Beanstalk
+
+After deployment, you need to manually complete the GitHub connection in the AWS Developer Tools Console.
 
 ### API Endpoints
 

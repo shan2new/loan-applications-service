@@ -1,0 +1,65 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - echo "Installing dependencies..."
+      - npm ci
+
+  pre_build:
+    commands:
+      - echo "Running tests..."
+      - npm test
+      - echo "Tests completed successfully"
+
+  build:
+    commands:
+      - echo "Building the application..."
+      - npm run build
+      - echo "Build completed successfully"
+
+  post_build:
+    commands:
+      - echo "Post build phase..."
+      - aws s3 cp .env.example .env.example || true
+      - echo "Creating Elastic Beanstalk configuration files..."
+      - mkdir -p .platform/hooks/prebuild
+      - echo '#!/bin/bash' > .platform/hooks/prebuild/00_setup_env.sh
+      - echo 'echo "Setting up environment..."' >> .platform/hooks/prebuild/00_setup_env.sh
+      - echo 'source /var/app/staging/node_modules/.bin/eb-env' >> .platform/hooks/prebuild/00_setup_env.sh
+      - chmod +x .platform/hooks/prebuild/00_setup_env.sh
+      - mkdir -p .platform/hooks/predeploy
+      - echo '#!/bin/bash' > .platform/hooks/predeploy/01_db_migrate.sh
+      - echo 'echo "Running database migrations..."' >> .platform/hooks/predeploy/01_db_migrate.sh
+      - echo 'cd /var/app/staging' >> .platform/hooks/predeploy/01_db_migrate.sh
+      - echo 'npx prisma migrate deploy' >> .platform/hooks/predeploy/01_db_migrate.sh
+      - chmod +x .platform/hooks/predeploy/01_db_migrate.sh
+      - mkdir -p .ebextensions
+      - |
+        cat > .ebextensions/00_environment.config << 'EOF'
+        option_settings:
+          aws:elasticbeanstalk:application:environment:
+            NODE_ENV: production
+            PORT: 8080
+        EOF
+      - echo "Creating Procfile..."
+      - echo "web: npm run start:prod" > Procfile
+
+artifacts:
+  files:
+    - package.json
+    - package-lock.json
+    - .ebextensions/**/*
+    - .platform/**/*
+    - dist/**/*
+    - prisma/**/*
+    - Procfile
+    - .npmrc
+    - .env.example
+  discard-paths: no
+
+cache:
+  paths:
+    - node_modules/**/*

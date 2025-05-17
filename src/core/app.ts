@@ -11,6 +11,7 @@ import { env } from '@shared/config/env';
 import { TokenAuthStrategy, AuthService, globalAuthMiddleware } from '@shared/auth';
 import { container } from 'tsyringe';
 import pinoHttp from 'pino-http';
+import { healthCheckRouter } from '@shared/health/healthcheck';
 
 const appLogger = createLogger('App');
 
@@ -164,11 +165,8 @@ export class Application {
     // Initialize all modules
     await this.moduleRegistry.initializeAllModules();
 
-    // Add health check endpoint
-    this.app.get('/health', (_req, res) => {
-      res.statusCode = 200;
-      res.json({ status: 'healthy' });
-    });
+    // Register the comprehensive health check router
+    this.app.use(healthCheckRouter);
 
     // Catch-all middleware for undefined routes (404)
     this.app.use((req, res) => {
