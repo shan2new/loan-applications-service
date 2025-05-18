@@ -5,7 +5,7 @@ import { InvalidEmailError, InvalidNameError } from '@shared/errors/domain-error
  */
 export class Customer {
   constructor(
-    private readonly _id: number | null,
+    private readonly _id: string | null,
     private _fullName: string,
     private _email: string,
     private readonly _createdAt: Date = new Date(),
@@ -14,7 +14,7 @@ export class Customer {
     this.validateFullName(_fullName);
   }
 
-  get id(): number | null {
+  get id(): string | null {
     return this._id;
   }
 
@@ -84,7 +84,7 @@ export class Customer {
    * Create a Customer instance from a database record
    */
   static fromPersistence(data: {
-    id: number;
+    id: string;
     full_name: string;
     email: string;
     created_at: Date | string;

@@ -9,8 +9,8 @@ type NumberField = number | Decimal | string;
  */
 export class LoanApplication {
   constructor(
-    private readonly _id: number | null,
-    private readonly _customerId: number,
+    private readonly _id: string | null,
+    private readonly _customerId: string,
     private readonly _amount: MoneyAmount,
     private readonly _termMonths: number,
     private readonly _annualInterestRate: number,
@@ -21,11 +21,11 @@ export class LoanApplication {
     this.validateInterestRate(_annualInterestRate);
   }
 
-  get id(): number | null {
+  get id(): string | null {
     return this._id;
   }
 
-  get customerId(): number {
+  get customerId(): string {
     return this._customerId;
   }
 
@@ -116,8 +116,8 @@ export class LoanApplication {
    * Handles both primitive types and Prisma's Decimal type
    */
   static fromPersistence(data: {
-    id: number;
-    customer_id: number;
+    id: string;
+    customer_id: string;
     amount: NumberField;
     term_months: number;
     annual_interest_rate: NumberField;

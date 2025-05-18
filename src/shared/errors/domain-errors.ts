@@ -21,7 +21,7 @@ export class InvalidNameError extends BadRequestError {
 }
 
 export class CustomerNotFoundByIdError extends NotFoundError {
-  constructor(id: number) {
+  constructor(id: string) {
     super(`Customer with ID ${id} not found`);
   }
 }
@@ -60,7 +60,7 @@ export class InvalidInterestRateError extends BadRequestError {
 }
 
 export class LoanApplicationNotFoundError extends NotFoundError {
-  constructor(id: number) {
+  constructor(id: string) {
     super(`Loan application with ID ${id} not found`);
   }
 }

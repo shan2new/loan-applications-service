@@ -6,6 +6,11 @@ import { z } from 'zod';
  */
 
 /**
+ * UUID validation schema
+ */
+const uuidSchema = z.string().uuid();
+
+/**
  * Customer validation schemas
  */
 export const customerSchemas = {
@@ -29,7 +34,7 @@ export const customerSchemas = {
  */
 export const loanApplicationSchemas = {
   create: z.object({
-    customerId: z.number().int().positive(),
+    customerId: uuidSchema,
     amount: z.number().positive(),
     termMonths: z.number().int().min(1).max(360),
     annualInterestRate: z.number().min(0).max(100),
@@ -45,5 +50,5 @@ export const commonSchemas = {
     pageSize: z.coerce.number().int().min(1).max(100).optional(),
   }),
 
-  id: z.coerce.number().int().positive(),
+  id: uuidSchema,
 };

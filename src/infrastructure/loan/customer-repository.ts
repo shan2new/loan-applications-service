@@ -16,7 +16,7 @@ export class CustomerRepository implements ICustomerRepository {
     this.prisma = prismaManager.getClient();
   }
 
-  async findById(id: number): Promise<Customer | null> {
+  async findById(id: string): Promise<Customer | null> {
     this.logger.debug({ customerId: id }, 'Finding customer by ID');
 
     const customerData = await this.prisma.customer.findUnique({
@@ -85,7 +85,7 @@ export class CustomerRepository implements ICustomerRepository {
     };
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: string): Promise<void> {
     this.logger.debug({ customerId: id }, 'Deleting customer');
 
     await this.prisma.customer.delete({

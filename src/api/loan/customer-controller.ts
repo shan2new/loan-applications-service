@@ -14,6 +14,7 @@ import { PaginationMeta, toCustomerDto } from './dtos';
 import { createLogger } from '@shared/logging/logger';
 import { BadRequestError } from '@shared/errors/application-error';
 import { handleApiError } from '@shared/errors/api-error-handler';
+import { isValidUUID } from '@shared/validation/uuid-utils';
 
 @injectable()
 export class CustomerController {
@@ -76,12 +77,11 @@ export class CustomerController {
         throw new BadRequestError('Customer ID is required');
       }
 
-      const id = parseInt(idParam, 10);
-      if (isNaN(id) || id <= 0) {
-        throw new BadRequestError('Invalid customer ID');
+      if (!isValidUUID(idParam)) {
+        throw new BadRequestError('Invalid customer ID format');
       }
 
-      const customer = await this.getCustomerByIdUseCase.execute(id);
+      const customer = await this.getCustomerByIdUseCase.execute(idParam);
 
       res.status(200).json({
         data: toCustomerDto(customer),
@@ -99,9 +99,8 @@ export class CustomerController {
         throw new BadRequestError('Customer ID is required');
       }
 
-      const id = parseInt(idParam, 10);
-      if (isNaN(id) || id <= 0) {
-        throw new BadRequestError('Invalid customer ID');
+      if (!isValidUUID(idParam)) {
+        throw new BadRequestError('Invalid customer ID format');
       }
 
       const validData = validate(customerSchemas.update, req.body);
@@ -115,7 +114,7 @@ export class CustomerController {
         updateData.email = validData.email;
       }
 
-      const updatedCustomer = await this.updateCustomerUseCase.execute(id, updateData);
+      const updatedCustomer = await this.updateCustomerUseCase.execute(idParam, updateData);
 
       res.status(200).json({
         data: toCustomerDto(updatedCustomer),
@@ -133,12 +132,11 @@ export class CustomerController {
         throw new BadRequestError('Customer ID is required');
       }
 
-      const id = parseInt(idParam, 10);
-      if (isNaN(id) || id <= 0) {
-        throw new BadRequestError('Invalid customer ID');
+      if (!isValidUUID(idParam)) {
+        throw new BadRequestError('Invalid customer ID format');
       }
 
-      await this.deleteCustomerUseCase.execute(id);
+      await this.deleteCustomerUseCase.execute(idParam);
       res.status(204).end();
     } catch (error) {
       handleApiError(error as Error, res, this.logger, true);

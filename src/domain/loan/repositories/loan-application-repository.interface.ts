@@ -8,7 +8,7 @@ export interface ILoanApplicationRepository {
    * Find a loan application by ID
    * @param id Loan application ID
    */
-  findById(id: number): Promise<LoanApplication | null>;
+  findById(id: string): Promise<LoanApplication | null>;
 
   /**
    * Save a loan application (create or update)
@@ -33,7 +33,7 @@ export interface ILoanApplicationRepository {
    * @param take Maximum number of records to return
    */
   findByCustomerId(
-    customerId: number,
+    customerId: string,
     skip?: number,
     take?: number,
   ): Promise<{ loanApplications: LoanApplication[]; total: number }>;
@@ -42,5 +42,5 @@ export interface ILoanApplicationRepository {
    * Delete a loan application by ID
    * @param id Loan application ID
    */
-  delete(id: number): Promise<void>;
+  delete(id: string): Promise<void>;
 }

@@ -7,9 +7,10 @@ import { CustomerNotFoundError } from '@shared/errors/application-error';
 import { createLogger } from '@shared/logging/logger';
 import { z } from 'zod';
 import { validate } from '@shared/validation/validator';
+import { isValidUUID } from '@shared/validation/uuid-utils';
 
 interface CreateLoanApplicationRequest {
-  customerId: number;
+  customerId: string;
   amount: number;
   termMonths: number;
   annualInterestRate: number;
@@ -17,7 +18,9 @@ interface CreateLoanApplicationRequest {
 
 // Input validation schema
 const createLoanApplicationSchema = z.object({
-  customerId: z.number().int().positive(),
+  customerId: z.string().refine(id => isValidUUID(id), {
+    message: 'Invalid UUID format for customerId',
+  }),
   amount: z.number().positive(),
   termMonths: z.number().int().min(1).max(360),
   annualInterestRate: z.number().min(0).max(100),

@@ -50,7 +50,7 @@ export class UpdateCustomerUseCase {
 
   constructor(private readonly customerRepository: ICustomerRepository) {}
 
-  async execute(id: number, data: { fullName?: string; email?: string }): Promise<Customer> {
+  async execute(id: string, data: { fullName?: string; email?: string }): Promise<Customer> {
     this.logger.info({ customerId: id }, 'Updating customer');
 
     // Validate input data
@@ -92,7 +92,7 @@ export class GetCustomerByIdUseCase {
 
   constructor(private readonly customerRepository: ICustomerRepository) {}
 
-  async execute(id: number): Promise<Customer> {
+  async execute(id: string): Promise<Customer> {
     this.logger.info({ customerId: id }, 'Getting customer by ID');
 
     const customer = await this.customerRepository.findById(id);
@@ -112,7 +112,7 @@ export class DeleteCustomerUseCase {
 
   constructor(private readonly customerRepository: ICustomerRepository) {}
 
-  async execute(id: number): Promise<void> {
+  async execute(id: string): Promise<void> {
     this.logger.info({ customerId: id }, 'Deleting customer');
 
     // Check if customer exists

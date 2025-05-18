@@ -5,7 +5,7 @@ import { LoanApplication } from '../../domain/loan/entities/loan-application';
  * Customer Data Transfer Object for API responses
  */
 export interface CustomerDto {
-  id: number;
+  id: string;
   fullName: string;
   email: string;
   createdAt: string;
@@ -15,8 +15,8 @@ export interface CustomerDto {
  * Loan Application Data Transfer Object for API responses
  */
 export interface LoanApplicationDto {
-  id: number;
-  customerId: number;
+  id: string;
+  customerId: string;
   amount: string;
   termMonths: number;
   annualInterestRate: string;
@@ -39,7 +39,7 @@ export interface PaginationMeta {
  */
 export function toCustomerDto(customer: Customer): CustomerDto {
   return {
-    id: customer.id as number,
+    id: customer.id as string,
     fullName: customer.fullName,
     email: customer.email,
     createdAt: customer.createdAt.toISOString(),
@@ -51,7 +51,7 @@ export function toCustomerDto(customer: Customer): CustomerDto {
  */
 export function toLoanApplicationDto(loanApplication: LoanApplication): LoanApplicationDto {
   return {
-    id: loanApplication.id as number,
+    id: loanApplication.id as string,
     customerId: loanApplication.customerId,
     amount: loanApplication.amount.amount.toFixed(2),
     termMonths: loanApplication.termMonths,

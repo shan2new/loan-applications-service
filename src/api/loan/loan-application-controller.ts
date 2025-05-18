@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { inject, injectable } from 'tsyringe';
 import { validate } from '@shared/validation/validator';
-import { commonSchemas } from '@shared/validation/schemas';
+import { commonSchemas, loanApplicationSchemas } from '@shared/validation/schemas';
 import {
   GetLoanApplicationByIdUseCase,
   GetLoanApplicationsByCustomerIdUseCase,
@@ -14,6 +14,7 @@ import { PaginationMeta, toLoanApplicationDto } from './dtos';
 import { createLogger } from '@shared/logging/logger';
 import { BadRequestError } from '@shared/errors/application-error';
 import { handleApiError } from '@shared/errors/api-error-handler';
+import { isValidUUID } from '@shared/validation/uuid-utils';
 
 @injectable()
 export class LoanApplicationController {
@@ -74,14 +75,18 @@ export class LoanApplicationController {
     try {
       this.logger.debug({ body: req.body }, 'Creating loan application request received');
 
-      // We'll use a direct object here rather than validating with the schema
-      // to avoid potential double validation issues
-      const loanApplicationData = {
-        customerId: parseInt(req.body.customerId, 10),
+      // Check if customerId is a valid UUID
+      if (!isValidUUID(req.body.customerId)) {
+        throw new BadRequestError('Invalid customer ID format');
+      }
+
+      // Use schema validation
+      const loanApplicationData = validate(loanApplicationSchemas.create, {
+        customerId: req.body.customerId,
         amount: parseFloat(req.body.amount),
         termMonths: parseInt(req.body.termMonths, 10),
         annualInterestRate: parseFloat(req.body.annualInterestRate),
-      };
+      });
 
       this.logger.debug({ parsedData: loanApplicationData }, 'Data parsed for loan application');
 
@@ -106,12 +111,11 @@ export class LoanApplicationController {
         throw new BadRequestError('Loan application ID is required');
       }
 
-      const id = parseInt(idParam, 10);
-      if (isNaN(id) || id <= 0) {
-        throw new BadRequestError('Invalid loan application ID');
+      if (!isValidUUID(idParam)) {
+        throw new BadRequestError('Invalid loan application ID format');
       }
 
-      const loanApplication = await this.getLoanApplicationByIdUseCase.execute(id);
+      const loanApplication = await this.getLoanApplicationByIdUseCase.execute(idParam);
       res.status(200).json({
         data: toLoanApplicationDto(loanApplication),
       });
@@ -157,9 +161,8 @@ export class LoanApplicationController {
         throw new BadRequestError('Customer ID is required');
       }
 
-      const customerId = parseInt(customerIdParam, 10);
-      if (isNaN(customerId) || customerId <= 0) {
-        throw new BadRequestError('Invalid customer ID');
+      if (!isValidUUID(customerIdParam)) {
+        throw new BadRequestError('Invalid customer ID format');
       }
 
       const queryParams = validate(commonSchemas.pagination, req.query);
@@ -170,7 +173,7 @@ export class LoanApplicationController {
       };
 
       const result = await this.getLoanApplicationsByCustomerIdUseCase.execute(
-        customerId,
+        customerIdParam,
         paginationParams,
       );
 

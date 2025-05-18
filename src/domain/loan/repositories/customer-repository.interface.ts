@@ -8,7 +8,7 @@ export interface ICustomerRepository {
    * Find a customer by ID
    * @param id Customer ID
    */
-  findById(id: number): Promise<Customer | null>;
+  findById(id: string): Promise<Customer | null>;
 
   /**
    * Find a customer by email
@@ -33,5 +33,5 @@ export interface ICustomerRepository {
    * Delete a customer by ID
    * @param id Customer ID
    */
-  delete(id: number): Promise<void>;
+  delete(id: string): Promise<void>;
 }

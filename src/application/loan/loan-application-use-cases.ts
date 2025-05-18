@@ -22,7 +22,7 @@ export class CreateLoanApplicationUseCase {
   ) {}
 
   async execute(data: {
-    customerId: number;
+    customerId: string;
     amount: number;
     termMonths: number;
     annualInterestRate: number;
@@ -76,7 +76,7 @@ export class GetLoanApplicationByIdUseCase {
 
   constructor(private readonly loanApplicationRepository: ILoanApplicationRepository) {}
 
-  async execute(id: number): Promise<LoanApplication> {
+  async execute(id: string): Promise<LoanApplication> {
     this.logger.info({ loanApplicationId: id }, 'Getting loan application by ID');
 
     const loanApplication = await this.loanApplicationRepository.findById(id);
@@ -100,7 +100,7 @@ export class GetLoanApplicationsByCustomerIdUseCase {
   ) {}
 
   async execute(
-    customerId: number,
+    customerId: string,
     params: { page?: number | undefined; pageSize?: number | undefined } = {},
   ): Promise<{
     loanApplications: LoanApplication[];

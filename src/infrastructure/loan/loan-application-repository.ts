@@ -16,7 +16,7 @@ export class LoanApplicationRepository implements ILoanApplicationRepository {
     this.prisma = prismaManager.getClient();
   }
 
-  async findById(id: number): Promise<LoanApplication | null> {
+  async findById(id: string): Promise<LoanApplication | null> {
     this.logger.debug({ loanApplicationId: id }, 'Finding loan application by ID');
 
     const loanApplicationData = await this.prisma.loanApplication.findUnique({
@@ -36,7 +36,7 @@ export class LoanApplicationRepository implements ILoanApplicationRepository {
       const updatedData = await this.prisma.loanApplication.update({
         where: { id: loanApplication.id },
         data: {
-          customer_id: loanApplicationData.customer_id as number,
+          customer_id: loanApplicationData.customer_id as string,
           amount: loanApplicationData.amount as number,
           term_months: loanApplicationData.term_months as number,
           annual_interest_rate: loanApplicationData.annual_interest_rate as number,
@@ -51,7 +51,7 @@ export class LoanApplicationRepository implements ILoanApplicationRepository {
 
       const createdData = await this.prisma.loanApplication.create({
         data: {
-          customer_id: loanApplicationData.customer_id as number,
+          customer_id: loanApplicationData.customer_id as string,
           amount: loanApplicationData.amount as number,
           term_months: loanApplicationData.term_months as number,
           annual_interest_rate: loanApplicationData.annual_interest_rate as number,
@@ -85,7 +85,7 @@ export class LoanApplicationRepository implements ILoanApplicationRepository {
   }
 
   async findByCustomerId(
-    customerId: number,
+    customerId: string,
     skip = 0,
     take = 10,
   ): Promise<{ loanApplications: LoanApplication[]; total: number }> {
@@ -112,7 +112,7 @@ export class LoanApplicationRepository implements ILoanApplicationRepository {
     };
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: string): Promise<void> {
     this.logger.debug({ loanApplicationId: id }, 'Deleting loan application');
 
     await this.prisma.loanApplication.delete({

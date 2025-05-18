@@ -6,5 +6,15 @@ NODE_PATH=$(command -v node)
 NPM_PATH=$(command -v npm)
 NPX_PATH=$(command -v npx)
 
-# Run lint-staged with the full path to npx
+# Exit if any command fails
+set -e
+
+# Format and lint staged files
+echo "🔍 Running lint-staged..."
 $NPX_PATH lint-staged
+
+# Run TypeScript compilation to check for errors
+echo "🧪 Checking TypeScript..."
+$NPM_PATH run build --if-present
+
+echo "✨ Pre-commit hook completed successfully!"
