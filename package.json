@@ -9,7 +9,7 @@
     "test": "NODE_ENV=test jest --silent --colors",
     "test:watch": "NODE_ENV=test jest --watch",
     "test:coverage": "NODE_ENV=test jest --coverage",
-    "test:ci": "NODE_ENV=test jest --ci",
+    "test:ci": "prisma generate && NODE_ENV=test jest --ci",
     "lint": "eslint ./src --ext .ts",
     "lint:fix": "eslint ./src --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",

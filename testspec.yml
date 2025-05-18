@@ -14,6 +14,7 @@ phases:
     commands:
       - 'echo Setting up test environment...'
       - 'export CI=true'
+      - 'npx prisma generate'
       - 'npm run lint'
       - 'mkdir -p ./test-results/junit'
 
