@@ -56,23 +56,40 @@ export class Application {
   private setupMiddleware(): void {
     appLogger.info('Setting up middleware');
 
-    // Security middleware
+    // Apply individual Helmet middlewares for clarity and control
     this.app.use(
-      helmet({
-        contentSecurityPolicy: {
-          directives: {
-            defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'"],
-            styleSrc: ["'self'", "'unsafe-inline'"],
-            imgSrc: ["'self'", 'data:'],
-          },
-        },
-        xssFilter: true,
-        hidePoweredBy: true,
-        frameguard: { action: 'deny' },
-        noSniff: true,
+      helmet.hsts({
+        maxAge: 31536000, // 1 year in seconds
+        includeSubDomains: true,
+        preload: true, // Optional: if you want to submit your domain for HSTS preloading
       }),
-    ); // Add security headers with strict CSP
+    );
+    // this.app.use(helmet.expectCt(...)); // ExpectCt removed for now due to type/version issues
+    this.app.use(helmet.referrerPolicy({ policy: 'no-referrer' }));
+    this.app.use(helmet.noSniff());
+    this.app.use(helmet.dnsPrefetchControl({ allow: false }));
+    this.app.use(helmet.frameguard({ action: 'deny' }));
+    this.app.use(helmet.hidePoweredBy());
+    this.app.use(helmet.ieNoOpen());
+    this.app.use(helmet.permittedCrossDomainPolicies({ permittedPolicies: 'none' }));
+    this.app.use(
+      helmet.contentSecurityPolicy({
+        directives: {
+          defaultSrc: ["'none'"],
+          connectSrc: ["'self'"],
+          scriptSrc: ["'none'"],
+          styleSrc: ["'none'"],
+          imgSrc: ["'none'"],
+          fontSrc: ["'none'"],
+          objectSrc: ["'none'"],
+          mediaSrc: ["'none'"],
+          childSrc: ["'none'"],
+          formAction: ["'self'"],
+          frameAncestors: ["'none'"],
+          baseUri: ["'none'"],
+        },
+      }),
+    );
 
     this.app.use(
       cors({
@@ -89,7 +106,7 @@ export class Application {
     this.app.use(
       pinoHttp({
         logger: appLogger,
-        autoLogging: false, // Disable automatic request/response logging
+        autoLogging: false,
         customLogLevel: function (_req, res, err) {
           if (res.statusCode >= 500 || err) {
             return 'error';

@@ -1,3 +1,4 @@
+import { injectable } from 'tsyringe';
 import { LoanApplication } from '../../domain/loan/entities/loan-application';
 import { ILoanApplicationRepository } from '../../domain/loan/repositories/loan-application-repository.interface';
 import { ICustomerRepository } from '../../domain/loan/repositories/customer-repository.interface';
@@ -10,9 +11,29 @@ import {
   LoanApplicationNotFoundError,
 } from '../../shared/errors/domain-errors';
 
+// Helper function for pagination
+interface PaginationParamsInput {
+  page?: number | undefined;
+  pageSize?: number | undefined;
+}
+
+interface PaginationParamsOutput {
+  page: number;
+  pageSize: number;
+  skip: number;
+}
+
+function getPaginationParameters(params: PaginationParamsInput): PaginationParamsOutput {
+  const page = params.page && params.page > 0 ? params.page : 1;
+  const pageSize = params.pageSize && params.pageSize > 0 ? params.pageSize : 10; // Default page size
+  const skip = (page - 1) * pageSize;
+  return { page, pageSize, skip };
+}
+
 /**
  * Use case for creating a new loan application
  */
+@injectable()
 export class CreateLoanApplicationUseCase {
   private readonly logger = createLogger('CreateLoanApplicationUseCase');
 
@@ -71,6 +92,7 @@ export class CreateLoanApplicationUseCase {
 /**
  * Use case for getting a loan application by ID
  */
+@injectable()
 export class GetLoanApplicationByIdUseCase {
   private readonly logger = createLogger('GetLoanApplicationByIdUseCase');
 
@@ -91,6 +113,7 @@ export class GetLoanApplicationByIdUseCase {
 /**
  * Use case for getting loan applications by customer ID
  */
+@injectable()
 export class GetLoanApplicationsByCustomerIdUseCase {
   private readonly logger = createLogger('GetLoanApplicationsByCustomerIdUseCase');
 
@@ -101,7 +124,7 @@ export class GetLoanApplicationsByCustomerIdUseCase {
 
   async execute(
     customerId: string,
-    params: { page?: number | undefined; pageSize?: number | undefined } = {},
+    params: PaginationParamsInput = {},
   ): Promise<{
     loanApplications: LoanApplication[];
     total: number;
@@ -117,9 +140,7 @@ export class GetLoanApplicationsByCustomerIdUseCase {
       throw new CustomerNotFoundByIdError(customerId);
     }
 
-    const page = params.page && params.page > 0 ? params.page : 1;
-    const pageSize = params.pageSize && params.pageSize > 0 ? params.pageSize : 10;
-    const skip = (page - 1) * pageSize;
+    const { page, pageSize, skip } = getPaginationParameters(params);
 
     const { loanApplications, total } = await this.loanApplicationRepository.findByCustomerId(
       customerId,
@@ -142,23 +163,20 @@ export class GetLoanApplicationsByCustomerIdUseCase {
 /**
  * Use case for listing all loan applications with pagination
  */
+@injectable()
 export class ListLoanApplicationsUseCase {
   private readonly logger = createLogger('ListLoanApplicationsUseCase');
 
   constructor(private readonly loanApplicationRepository: ILoanApplicationRepository) {}
 
-  async execute(
-    params: { page?: number | undefined; pageSize?: number | undefined } = {},
-  ): Promise<{
+  async execute(params: PaginationParamsInput = {}): Promise<{
     loanApplications: LoanApplication[];
     total: number;
     page: number;
     pageSize: number;
     totalPages: number;
   }> {
-    const page = params.page && params.page > 0 ? params.page : 1;
-    const pageSize = params.pageSize && params.pageSize > 0 ? params.pageSize : 10;
-    const skip = (page - 1) * pageSize;
+    const { page, pageSize, skip } = getPaginationParameters(params);
 
     this.logger.info({ page, pageSize }, 'Listing loan applications');
 
