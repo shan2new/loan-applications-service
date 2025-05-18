@@ -2,7 +2,6 @@ import 'reflect-metadata'; // Required for tsyringe
 import express, { Express } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
-import rateLimit from 'express-rate-limit';
 import { createLogger } from '@shared/logging/logger';
 import { errorHandler } from '@shared/errors/error-middleware';
 import { ModuleRegistry, IModule } from '@core/module';
@@ -85,28 +84,6 @@ export class Application {
         maxAge: 86400, // 24 hours
       }),
     ); // Enhanced CORS with explicit configuration
-
-    // Global rate limiting
-    const globalLimiter = rateLimit({
-      windowMs: 15 * 60 * 1000, // 15 minutes
-      limit: 100, // Limit each IP to 100 requests per window
-      standardHeaders: 'draft-7', // Use the draft 7 standard headers
-      legacyHeaders: false, // Disable legacy headers
-      message: { error: { message: 'Too many requests, please try again later.' } },
-      keyGenerator: req => req.ip || 'unknown', // Use IP for rate limiting
-    });
-    this.app.use(globalLimiter);
-
-    // Stricter rate limiting for authentication endpoints
-    const authLimiter = rateLimit({
-      windowMs: 60 * 60 * 1000, // 1 hour
-      limit: 5, // 5 requests per hour
-      standardHeaders: 'draft-7',
-      legacyHeaders: false,
-      message: { error: { message: 'Too many authentication attempts, please try again later.' } },
-      skipSuccessfulRequests: false, // Count successful attempts too
-    });
-    this.app.use('/api/auth', authLimiter);
 
     // Request logging with auto-logging disabled
     this.app.use(
