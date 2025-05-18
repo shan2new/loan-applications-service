@@ -7,9 +7,6 @@ import { Express } from 'express';
 // Default test API token for tests
 export const TEST_API_TOKEN = 'test-api-token';
 
-// Check if we're running in CI environment
-const isCI = process.env.CI === 'true' || process.env.CODEBUILD_BUILD_ID !== undefined;
-
 // Use a dedicated PrismaClient for tests with the test database URL
 const prisma = new PrismaClient({
   datasources: {
@@ -69,12 +66,6 @@ export class TestDatabase {
   }
 
   async setup() {
-    // Skip actual database operations if in CI environment
-    if (isCI) {
-      console.log('Running in CI environment - skipping database operations');
-      return;
-    }
-
     try {
       // First ensure the database is connected
       await prisma.$connect();
@@ -93,10 +84,6 @@ export class TestDatabase {
   }
 
   async teardown() {
-    if (isCI) {
-      return;
-    }
-
     if (this._cleanup) {
       await this._cleanup();
       this._cleanup = null;
@@ -104,10 +91,6 @@ export class TestDatabase {
   }
 
   async resetDatabase(): Promise<void> {
-    if (isCI) {
-      return;
-    }
-
     try {
       // Delete all data from tables in the correct order to respect foreign key constraints
       await prisma.$transaction([

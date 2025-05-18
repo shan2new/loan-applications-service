@@ -133,6 +133,33 @@ resource "aws_codebuild_project" "build" {
   }
 }
 
+# CloudWatch alarm for test failures
+resource "aws_cloudwatch_metric_alarm" "test_failure_alarm" {
+  alarm_name          = "${var.prefix}-test-failure-alarm-${var.environment}"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = 1
+  metric_name         = "FailedTests"
+  namespace           = "AWS/CodeBuild"
+  period              = 300
+  statistic           = "Sum"
+  threshold           = 1
+  alarm_description   = "This alarm monitors for test failures in the ${var.prefix} pipeline"
+
+  dimensions = {
+    ProjectName = aws_codebuild_project.test.name
+  }
+
+  alarm_actions = [
+    # Add SNS topic ARN here if you want notifications
+    # var.sns_topic_arn
+  ]
+
+  tags = {
+    Name        = "${var.prefix}-test-failure-alarm"
+    Environment = var.environment
+  }
+}
+
 # CodePipeline for CI/CD workflow
 resource "aws_codepipeline" "pipeline" {
   name     = "${var.prefix}-pipeline-${var.environment}"
@@ -165,8 +192,6 @@ resource "aws_codepipeline" "pipeline" {
   }
 
   # Test stage - Run tests before building
-  # Commented out temporarily
-  /*
   stage {
     name = "Test"
 
@@ -184,7 +209,6 @@ resource "aws_codepipeline" "pipeline" {
       }
     }
   }
-  */
 
   # Build stage - Build the application
   stage {

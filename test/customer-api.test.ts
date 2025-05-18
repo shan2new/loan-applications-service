@@ -2,12 +2,6 @@ import request from 'supertest';
 import { Express } from 'express';
 import { setupTestApp, TestDatabase, authenticatedRequest } from './test-utils';
 
-// Check if we're running in CI environment
-const isCI = process.env.CI === 'true' || process.env.CODEBUILD_BUILD_ID !== undefined;
-
-// Define a conditional test function that skips tests in CI
-const conditionalTest = isCI ? test.skip : test;
-
 // Define interfaces for the API responses
 interface CustomerDto {
   id: number;
@@ -36,7 +30,7 @@ describe('Customer API', () => {
   });
 
   describe('POST /api/customers', () => {
-    conditionalTest('should create a new customer', async () => {
+    test('should create a new customer', async () => {
       const customer = {
         fullName: 'John Doe',
         email: 'john.doe@example.com',
@@ -53,7 +47,7 @@ describe('Customer API', () => {
       expect(response.body.data).toHaveProperty('createdAt');
     });
 
-    conditionalTest('should return 400 if email is invalid', async () => {
+    test('should return 400 if email is invalid', async () => {
       const customer = {
         fullName: 'John Doe',
         email: 'invalid-email',
@@ -68,7 +62,7 @@ describe('Customer API', () => {
       expect(response.body.error.message).toBeDefined();
     });
 
-    conditionalTest('should return 400 if name is too short', async () => {
+    test('should return 400 if name is too short', async () => {
       const customer = {
         fullName: 'J',
         email: 'john.doe@example.com',
@@ -83,7 +77,7 @@ describe('Customer API', () => {
       expect(response.body.error.message).toBeDefined();
     });
 
-    conditionalTest('should return 401 if authorization token is missing', async () => {
+    test('should return 401 if authorization token is missing', async () => {
       const customer = {
         fullName: 'John Doe',
         email: 'john.doe@example.com',
@@ -97,14 +91,14 @@ describe('Customer API', () => {
   });
 
   describe('GET /api/customers', () => {
-    conditionalTest('should return an empty array when no customers exist', async () => {
+    test('should return an empty array when no customers exist', async () => {
       const response = await authenticatedRequest(app).get('/api/customers').expect(200);
 
       expect(response.body.data).toBeInstanceOf(Array);
       expect(response.body.data.length).toBe(0);
     });
 
-    conditionalTest('should return all customers', async () => {
+    test('should return all customers', async () => {
       // Create test customers
       const customers = [
         {
@@ -139,7 +133,7 @@ describe('Customer API', () => {
       expect(emails).toContain(createdCustomers[1].email);
     });
 
-    conditionalTest('should support pagination', async () => {
+    test('should support pagination', async () => {
       // Create multiple test customers
       const customers = Array.from({ length: 5 }).map((_, i) => ({
         fullName: `Customer ${i}`,
@@ -187,7 +181,7 @@ describe('Customer API', () => {
   });
 
   describe('GET /api/customers/:id', () => {
-    conditionalTest('should return a customer by ID', async () => {
+    test('should return a customer by ID', async () => {
       // Create a test customer
       const customer = {
         fullName: 'John Doe',
@@ -215,14 +209,14 @@ describe('Customer API', () => {
       expect(response.body.data.email).toBe(customer.email);
     });
 
-    conditionalTest('should return 404 if customer does not exist', async () => {
+    test('should return 404 if customer does not exist', async () => {
       const response = await authenticatedRequest(app).get('/api/customers/999').expect(404);
 
       expect(response.body.error).toBeDefined();
       expect(response.body.error.message).toContain('not found');
     });
 
-    conditionalTest('should return 400 if ID is invalid', async () => {
+    test('should return 400 if ID is invalid', async () => {
       const response = await authenticatedRequest(app).get('/api/customers/invalid-id').expect(400);
 
       expect(response.body.error).toBeDefined();
@@ -230,7 +224,7 @@ describe('Customer API', () => {
   });
 
   describe('PATCH /api/customers/:id', () => {
-    conditionalTest('should update a customer', async () => {
+    test('should update a customer', async () => {
       // Create a test customer
       const customer = {
         fullName: 'John Doe',
@@ -256,7 +250,7 @@ describe('Customer API', () => {
       expect(response.body.data.email).toBe(customer.email); // Email unchanged
     });
 
-    conditionalTest('should return 404 if customer does not exist', async () => {
+    test('should return 404 if customer does not exist', async () => {
       const update = {
         fullName: 'John Updated',
       };
@@ -270,7 +264,7 @@ describe('Customer API', () => {
       expect(response.body.error.message).toContain('not found');
     });
 
-    conditionalTest('should return 400 if update data is invalid', async () => {
+    test('should return 400 if update data is invalid', async () => {
       // Create a test customer
       const customer = {
         fullName: 'John Doe',
@@ -292,7 +286,7 @@ describe('Customer API', () => {
   });
 
   describe('DELETE /api/customers/:id', () => {
-    conditionalTest('should delete a customer', async () => {
+    test('should delete a customer', async () => {
       // Create a test customer
       const customer = {
         fullName: 'John Doe',
@@ -310,7 +304,7 @@ describe('Customer API', () => {
       await authenticatedRequest(app).get(`/api/customers/${customerId}`).expect(404);
     });
 
-    conditionalTest('should return 404 if customer does not exist', async () => {
+    test('should return 404 if customer does not exist', async () => {
       const response = await authenticatedRequest(app).delete('/api/customers/999').expect(404);
 
       expect(response.body.error).toBeDefined();
