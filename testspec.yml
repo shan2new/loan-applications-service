@@ -14,6 +14,10 @@ phases:
     commands:
       - 'echo Setting up test environment...'
       - 'export CI=true'
+      - |
+        # Construct DATABASE_URL from environment variables set by secrets-manager
+        export DATABASE_URL="postgresql://$DB_USERNAME:$DB_PASSWORD@$DB_HOST:$DB_PORT/$TEST_DB_NAME?schema=public"
+        echo "Database connection string constructed for test database: $TEST_DB_NAME"
       - 'npx prisma generate'
       - 'npm run lint'
       - 'mkdir -p ./test-results/junit'
@@ -48,3 +52,9 @@ env:
     JEST_JUNIT_OUTPUT_NAME: 'junit.xml'
     JEST_JUNIT_CLASSNAME: '{classname}'
     JEST_JUNIT_TITLE: '{title}'
+  secrets-manager:
+    DB_HOST: '$DB_SECRETS_ARN:host'
+    DB_PORT: '$DB_SECRETS_ARN:port'
+    DB_USERNAME: '$DB_SECRETS_ARN:username'
+    DB_PASSWORD: '$DB_SECRETS_ARN:password'
+    TEST_DB_NAME: '$DB_SECRETS_ARN:test_dbname'
