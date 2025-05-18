@@ -77,12 +77,6 @@ export class LoanApplicationController {
 
       // Handle numeric IDs for test compatibility
       if (req.body.customerId) {
-        // Special test case for customer ID 999 - for test compatibility
-        if (req.body.customerId === 999 || req.body.customerId === '999') {
-          this.logger.debug('Test case with ID 999 detected');
-          throw new BadRequestError('Customer with ID 999 not found');
-        }
-
         // Only convert numeric IDs to strings, leave UUID strings as is
         if (typeof req.body.customerId !== 'string') {
           req.body.customerId = String(req.body.customerId);
