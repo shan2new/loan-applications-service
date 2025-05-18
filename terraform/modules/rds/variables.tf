@@ -45,7 +45,11 @@ variable "engine_version" {
 variable "db_name" {
   description = "Name of the initial database"
   type        = string
-  default     = "loandb"
+}
+
+variable "test_db_name" {
+  description = "Name of the test database"
+  type        = string
 }
 
 variable "db_username" {

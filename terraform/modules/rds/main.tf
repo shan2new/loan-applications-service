@@ -21,12 +21,12 @@ resource "random_password" "db_password" {
 
 # Store the database credentials in Secrets Manager
 resource "aws_secretsmanager_secret" "db_credentials" {
-  name                    = "${var.prefix}-${var.environment}-db-creds-${formatdate("YYYYMMDDHHmmss", timestamp())}"
+  name                    = "${var.prefix}-db-creds"
   description             = "RDS credentials for ${var.prefix}"
   recovery_window_in_days = 7
 
   tags = {
-    Name        = "${var.prefix}-db-credentials"
+    Name        = "${var.prefix}-db-creds"
     Environment = var.environment
   }
 }
@@ -40,6 +40,7 @@ resource "aws_secretsmanager_secret_version" "db_credentials" {
     host     = aws_db_instance.postgresql.address
     port     = aws_db_instance.postgresql.port
     dbname   = var.db_name
+    test_dbname = var.test_db_name
     dbInstanceIdentifier = aws_db_instance.postgresql.id
   })
 }

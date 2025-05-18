@@ -59,6 +59,11 @@ resource "aws_codebuild_project" "test" {
       name  = "STAGE"
       value = "test"
     }
+
+    environment_variable {
+      name  = "DB_SECRETS_ARN"
+      value = var.db_secrets_arn
+    }
   }
 
   source {

@@ -15,7 +15,7 @@ variable "environment" {
 variable "service_name" {
   description = "The name of the service"
   type        = string
-  default     = "loan-apps-svc"
+  default     = "loan-application-service"
 }
 
 # VPC Variables
@@ -66,6 +66,12 @@ variable "db_username" {
   description = "Master username for the RDS instance"
   type        = string
   default     = "dbadmin"
+}
+
+variable "test_db_name" {
+  description = "Name of the test database"
+  type        = string
+  default     = "test_loansdb"
 }
 
 # Elastic Beanstalk Variables

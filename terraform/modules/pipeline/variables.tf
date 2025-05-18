@@ -3,6 +3,11 @@ variable "prefix" {
   type        = string
 }
 
+variable "service_name" {
+  description = "Name of the service"
+  type        = string
+}
+
 variable "environment" {
   description = "Environment (dev, staging, prod)"
   type        = string
@@ -53,5 +58,10 @@ variable "elastic_beanstalk_application" {
 
 variable "elastic_beanstalk_environment" {
   description = "Name of the Elastic Beanstalk environment"
+  type        = string
+}
+
+variable "db_secrets_arn" {
+  description = "ARN of the Secrets Manager secret containing database credentials"
   type        = string
 }

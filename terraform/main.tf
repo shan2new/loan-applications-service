@@ -65,6 +65,7 @@ module "rds" {
   instance_class    = var.db_instance_class
   allocated_storage = var.db_allocated_storage
   db_name           = var.db_name
+  test_db_name      = var.test_db_name
   db_username       = var.db_username
   multi_az          = var.environment == "prod" ? true : false
 }
@@ -160,8 +161,9 @@ resource "aws_iam_role_policy_attachment" "eb_cloudwatch_logs" {
 module "pipeline" {
   source = "./modules/pipeline"
 
-  prefix      = local.prefix
-  environment = var.environment
+  service_name = var.service_name
+  prefix       = local.prefix
+  environment  = var.environment
 
   # IAM roles
   codepipeline_role_arn = module.security.codepipeline_role_arn
@@ -171,6 +173,9 @@ module "pipeline" {
   codestar_connection_arn = var.codestar_connection_arn
   repository_name         = var.github_repository
   branch_name             = var.github_branch
+
+  # Database secrets
+  db_secrets_arn = module.rds.secrets_manager_arn
 
   # Elastic Beanstalk deployment
   elastic_beanstalk_application = module.eb.application_name

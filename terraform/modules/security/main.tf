@@ -366,6 +366,23 @@ resource "aws_iam_role_policy" "codebuild" {
         ]
         Effect   = "Allow"
         Resource = "*"
+      },
+      {
+        Action = [
+          "ssm:GetParameter",
+          "ssm:GetParameters",
+          "ssm:GetParametersByPath"
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      },
+      {
+        Action = [
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:DescribeSecret"
+        ]
+        Effect   = "Allow"
+        Resource = "*"
       }
     ]
   })
