@@ -177,6 +177,11 @@ module "pipeline" {
   # Database secrets
   db_secrets_arn = module.rds.secrets_manager_arn
 
+  # VPC configuration for CodeBuild
+  vpc_id             = module.vpc.vpc_id
+  private_subnet_ids = module.vpc.private_subnet_ids
+  security_group_id  = module.security.codebuild_security_group_id
+
   # Elastic Beanstalk deployment
   elastic_beanstalk_application = module.eb.application_name
   elastic_beanstalk_environment = module.eb.environment_name

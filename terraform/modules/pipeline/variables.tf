@@ -65,3 +65,18 @@ variable "db_secrets_arn" {
   description = "ARN of the Secrets Manager secret containing database credentials"
   type        = string
 }
+
+variable "vpc_id" {
+  description = "ID of the VPC where CodeBuild will run"
+  type        = string
+}
+
+variable "private_subnet_ids" {
+  description = "List of private subnet IDs for the CodeBuild VPC configuration"
+  type        = list(string)
+}
+
+variable "security_group_id" {
+  description = "Security group ID to use for CodeBuild VPC configuration"
+  type        = string
+}

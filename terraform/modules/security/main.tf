@@ -30,8 +30,8 @@ resource "aws_security_group" "rds" {
     from_port       = 5432
     to_port         = 5432
     protocol        = "tcp"
-    security_groups = [aws_security_group.eb_instances.id]
-    description     = "Allow PostgreSQL from EB instances"
+    security_groups = [aws_security_group.eb_instances.id, aws_security_group.codebuild.id]
+    description     = "Allow PostgreSQL from EB instances and CodeBuild"
   }
 
   egress {
@@ -43,6 +43,25 @@ resource "aws_security_group" "rds" {
 
   tags = {
     Name        = "${var.prefix}-rds-sg"
+    Environment = var.environment
+  }
+}
+
+# Security group for CodeBuild
+resource "aws_security_group" "codebuild" {
+  name        = "${var.prefix}-codebuild-sg"
+  description = "Security group for CodeBuild projects"
+  vpc_id      = var.vpc_id
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name        = "${var.prefix}-codebuild-sg"
     Environment = var.environment
   }
 }
@@ -353,7 +372,10 @@ resource "aws_iam_role_policy" "codebuild" {
           "ec2:DeleteNetworkInterface",
           "ec2:DescribeSubnets",
           "ec2:DescribeSecurityGroups",
-          "ec2:DescribeVpcs"
+          "ec2:DescribeVpcs",
+          "ec2:CreateNetworkInterfacePermission",
+          "ec2:AssignPrivateIpAddresses",
+          "ec2:UnassignPrivateIpAddresses"
         ]
         Effect   = "Allow"
         Resource = "*"
@@ -386,4 +408,10 @@ resource "aws_iam_role_policy" "codebuild" {
       }
     ]
   })
+}
+
+# Attach AmazonVPCFullAccess policy to the CodeBuild role for VPC access
+resource "aws_iam_role_policy_attachment" "codebuild_vpc_access" {
+  role       = aws_iam_role.codebuild.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonVPCFullAccess"
 }

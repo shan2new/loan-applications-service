@@ -66,6 +66,13 @@ resource "aws_codebuild_project" "test" {
     }
   }
 
+  # Add VPC configuration to allow database access
+  vpc_config {
+    vpc_id             = var.vpc_id
+    subnets            = var.private_subnet_ids
+    security_group_ids = [var.security_group_id]
+  }
+
   source {
     type      = "CODEPIPELINE"
     buildspec = "testspec.yml"  # Dedicated buildspec for testing

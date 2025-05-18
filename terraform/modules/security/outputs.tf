@@ -4,7 +4,7 @@ output "eb_instance_security_group_id" {
 }
 
 output "rds_security_group_id" {
-  description = "Security group ID for RDS database"
+  description = "ID of the security group for RDS"
   value       = aws_security_group.rds.id
 }
 
@@ -26,4 +26,9 @@ output "codepipeline_role_arn" {
 output "codebuild_role_arn" {
   description = "ARN of the CodeBuild IAM role"
   value       = aws_iam_role.codebuild.arn
+}
+
+output "codebuild_security_group_id" {
+  description = "ID of the security group for CodeBuild"
+  value       = aws_security_group.codebuild.id
 }
