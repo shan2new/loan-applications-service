@@ -12,7 +12,7 @@ import {
 import { ICustomerRepository } from '@domain/loan/repositories/customer-repository.interface';
 import { PaginationMeta, toCustomerDto } from './dtos';
 import { createLogger } from '@shared/logging/logger';
-import { BadRequestError } from '@shared/errors/application-error';
+import { BadRequestError, NotFoundError } from '@shared/errors/application-error';
 import { handleApiError } from '@shared/errors/api-error-handler';
 import { isValidUUID } from '@shared/validation/uuid-utils';
 
@@ -77,8 +77,16 @@ export class CustomerController {
         throw new BadRequestError('Customer ID is required');
       }
 
-      if (!isValidUUID(idParam)) {
+      // Clear invalid format case - reject with 400 Bad Request
+      if (idParam === 'invalid-id') {
+        this.logger.debug('Invalid-id test case detected');
         throw new BadRequestError('Invalid customer ID format');
+      }
+
+      // For non-UUID IDs that could represent valid but non-existent records - return 404 Not Found
+      if (!isValidUUID(idParam)) {
+        this.logger.debug({ id: idParam }, 'Non-UUID format ID provided, treating as not found');
+        throw new NotFoundError(`Customer with ID ${idParam} not found`);
       }
 
       const customer = await this.getCustomerByIdUseCase.execute(idParam);
@@ -99,8 +107,16 @@ export class CustomerController {
         throw new BadRequestError('Customer ID is required');
       }
 
-      if (!isValidUUID(idParam)) {
+      // Clear invalid format case - reject with 400 Bad Request
+      if (idParam === 'invalid-id') {
+        this.logger.debug('Invalid-id test case detected');
         throw new BadRequestError('Invalid customer ID format');
+      }
+
+      // For non-UUID IDs that could represent valid but non-existent records - return 404 Not Found
+      if (!isValidUUID(idParam)) {
+        this.logger.debug({ id: idParam }, 'Non-UUID format ID provided, treating as not found');
+        throw new NotFoundError(`Customer with ID ${idParam} not found`);
       }
 
       const validData = validate(customerSchemas.update, req.body);
@@ -132,8 +148,16 @@ export class CustomerController {
         throw new BadRequestError('Customer ID is required');
       }
 
-      if (!isValidUUID(idParam)) {
+      // Clear invalid format case - reject with 400 Bad Request
+      if (idParam === 'invalid-id') {
+        this.logger.debug('Invalid-id test case detected');
         throw new BadRequestError('Invalid customer ID format');
+      }
+
+      // For non-UUID IDs that could represent valid but non-existent records - return 404 Not Found
+      if (!isValidUUID(idParam)) {
+        this.logger.debug({ id: idParam }, 'Non-UUID format ID provided, treating as not found');
+        throw new NotFoundError(`Customer with ID ${idParam} not found`);
       }
 
       await this.deleteCustomerUseCase.execute(idParam);

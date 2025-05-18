@@ -200,6 +200,9 @@ describe('Customer API', () => {
 
       const customerId = createResponse.body.data.id;
 
+      // Verify ID is a valid UUID - test will fail early if not
+      expect(customerId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+
       // Add a small delay to ensure database consistency
       await new Promise(resolve => setTimeout(resolve, 100));
 

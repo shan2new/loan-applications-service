@@ -56,3 +56,4 @@ packaged.yaml
 coverage/
 *.lock.hcl
 tfplan
+junit.xml
