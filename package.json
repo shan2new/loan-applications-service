@@ -17,7 +17,7 @@
     "start": "node -r tsconfig-paths/register dist/index.js",
     "dev": "ts-node-dev --respawn --transpile-only --require reflect-metadata -r tsconfig-paths/register src/index.ts",
     "prepare": "[ \"$NODE_ENV\" != \"production\" ] && husky || echo \"Skipping husky in production\"",
-    "docs:generate": "typedoc --out docs/api --entryPointStrategy expand src/",
+    "docs:generate": "typedoc --options ./typedoc.json",
     "docs:serve": "http-server docs/api -o"
   },
   "keywords": [],
@@ -53,6 +53,7 @@
     "tsc-alias": "1.8.16",
     "tsconfig-paths": "4.2.0",
     "typedoc": "0.28.4",
+    "typedoc-plugin-markdown": "4.6.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "8.32.1"
   },

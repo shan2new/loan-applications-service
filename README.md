@@ -252,14 +252,36 @@ Response:
 
 The project uses Prisma ORM for database operations and migrations.
 
-### Database Schema
+### Entities
 
-The core database schema consists of two main tables:
+The core database schema consists of two main entities:
 
 - `customers`: Stores customer information
 - `loan_applications`: Stores loan application data with a relation to customers
 
-See [prisma/schema.prisma](prisma/schema.prisma) for the complete schema definition.
+### Schema Details
+
+#### Customers
+
+Contains customer information:
+
+- id (UUID primary key)
+- full_name (String)
+- email (String, unique)
+- created_at (DateTime)
+- Relationship to loan applications (one-to-many)
+
+#### Loan Applications
+
+The core table that stores loan application data including:
+
+- id (UUID primary key)
+- customer_id (UUID, foreign key to customers)
+- amount (Decimal)
+- term_months (Integer)
+- annual_interest_rate (Decimal)
+- monthly_payment (Decimal)
+- created_at (DateTime)
 
 ### Migration Commands
 

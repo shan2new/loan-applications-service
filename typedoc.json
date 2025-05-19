@@ -1,0 +1,17 @@
+{
+  "entryPointStrategy": "expand",
+  "entryPoints": ["src"],
+  "out": "docs/api",
+  "excludePrivate": true,
+  "excludeProtected": false,
+  "excludeExternals": true,
+  "includeVersion": true,
+  "theme": "default",
+  "hideGenerator": true,
+  "exclude": ["**/*.spec.ts", "**/*.test.ts"],
+  "externalPattern": ["**/node_modules/**"],
+  "categorizeByGroup": true,
+  "categoryOrder": ["API", "Domain", "Infrastructure", "Application", "*"],
+  "readme": "README.md",
+  "name": "Loan Applications Service"
+}
