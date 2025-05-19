@@ -57,3 +57,6 @@ coverage/
 *.lock.hcl
 tfplan
 junit.xml
+
+# Generated API documentation
+docs/api/
