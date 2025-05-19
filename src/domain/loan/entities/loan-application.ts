@@ -2,7 +2,11 @@ import { MoneyAmount } from '../value-objects/money-amount';
 import { InvalidTermError, InvalidInterestRateError } from '@shared/errors/domain-errors';
 import { Decimal } from '@prisma/client/runtime/library';
 
-type NumberField = number | Decimal | string;
+/**
+ * Type representing numeric values that can be stored in various formats
+ * Used for handling different number representations in the database
+ */
+export type NumberField = number | Decimal | string;
 
 /**
  * LoanApplication entity representing a customer's loan application

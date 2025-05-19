@@ -1,0 +1,167 @@
+%% Configuration
+%%{
+  init: {
+    'theme': 'default',
+    'flowchart': {
+      'curve': 'basis',
+      'nodeSpacing': 80,
+      'rankSpacing': 100,
+      'padding': 30,
+      'diagramPadding': 30,
+      'useMaxWidth': false
+    },
+    'themeVariables': {
+      'fontSize': '16px',
+      'fontFamily': 'arial',
+      'lineWidth': 2
+    }
+  }
+}%%
+
+flowchart LR
+    %% Client Entry Point
+    Client([Client Request]) --> Express
+
+    %% Core Components
+    subgraph Core["Core System"]
+        direction TB
+        Express[Express Server]
+        App[Application Class]
+        ModuleReg[Module Registry]
+        PluginReg[Plugin Registry]
+        TSyringe[TSyringe DI Container]
+
+        App --> Express
+        App --> ModuleReg
+        App --> PluginReg
+        App --> TSyringe
+    end
+
+    %% API Layer Components
+    subgraph API["API Layer"]
+        direction TB
+        LoanAPI[Loan API Controller]
+        AuthMiddleware[Auth Middleware]
+        ValidationMiddleware[Validation Middleware]
+        ErrorMiddleware[Error Handling Middleware]
+        HealthCheck[Health Check Endpoint]
+
+        Express --> LoanAPI
+        Express --> AuthMiddleware
+        Express --> ValidationMiddleware
+        Express --> ErrorMiddleware
+        Express --> HealthCheck
+    end
+
+    %% Shared Components
+    subgraph Shared["Shared Services"]
+        direction TB
+        AuthService[Authentication Service]
+        ConfigService[Configuration Service]
+        Validator[Validation Service]
+        ErrorHandler[Error Handler]
+        Logger[Logging Service]
+
+        AuthMiddleware --> AuthService
+        ValidationMiddleware --> Validator
+        ErrorMiddleware --> ErrorHandler
+    end
+
+    %% Application Layer Components
+    subgraph Application["Application Layer"]
+        direction TB
+        LoanUC[Loan Application Use Cases]
+        PaymentCalc[Payment Calculator Service]
+
+        LoanAPI --> LoanUC
+        LoanUC --> PaymentCalc
+    end
+
+    %% Domain Layer Components
+    subgraph Domain["Domain Layer"]
+        direction TB
+        subgraph Entities["Entities & Value Objects"]
+            direction TB
+            LoanEntity[Loan Application Entity]
+            CustomerEntity[Customer Entity]
+            MoneyVO[Money Value Object]
+
+            LoanEntity -.- MoneyVO
+            CustomerEntity -.- MoneyVO
+        end
+
+        subgraph Repositories["Repository Interfaces"]
+            direction LR
+            LoanRepI[Loan Repository Interface]
+            CustomerRepI[Customer Repository Interface]
+        end
+
+        subgraph DomainServices["Domain Services"]
+            LoanService[Loan Domain Service]
+        end
+
+        LoanUC --> LoanEntity
+        LoanUC --> CustomerEntity
+        LoanUC --> LoanRepI
+        LoanUC --> CustomerRepI
+        LoanUC --> LoanService
+    end
+
+    %% Infrastructure Layer Components
+    subgraph Infrastructure["Infrastructure Layer"]
+        direction TB
+        subgraph DataAccess["Data Access"]
+            direction TB
+            LoanRepImpl[Loan Repository Implementation]
+            CustomerRepImpl[Customer Repository Implementation]
+            PrismaManager[Prisma Client Manager]
+            DB[(PostgreSQL Database)]
+
+            LoanRepImpl --> PrismaManager
+            CustomerRepImpl --> PrismaManager
+            PrismaManager --> DB
+        end
+
+        LoanRepI --> LoanRepImpl
+        CustomerRepI --> CustomerRepImpl
+    end
+
+    %% DI Container Connections
+    TSyringe -. "injects" .-> LoanUC
+    TSyringe -. "injects" .-> LoanRepImpl
+    TSyringe -. "injects" .-> CustomerRepImpl
+    TSyringe -. "injects" .-> PaymentCalc
+    TSyringe -. "injects" .-> AuthService
+
+    %% Module Registry manages API components
+    ModuleReg -. "registers" .-> LoanAPI
+
+    %% Logging Connections
+    LoanUC -. "logs via" .-> Logger
+    LoanRepImpl -. "logs via" .-> Logger
+    CustomerRepImpl -. "logs via" .-> Logger
+
+    %% Styling
+    classDef apiLayer fill:#f9d5e5,stroke:#e06377,stroke-width:3px,color:#333333,font-weight:bold
+    classDef appLayer fill:#e3eaa7,stroke:#86af49,stroke-width:3px,color:#333333,font-weight:bold
+    classDef domainLayer fill:#b5e7a0,stroke:#3b7d4f,stroke-width:3px,color:#333333,font-weight:bold
+    classDef infraLayer fill:#d6cbd3,stroke:#846b8a,stroke-width:3px,color:#333333,font-weight:bold
+    classDef coreLayer fill:#bdcebe,stroke:#5b756c,stroke-width:3px,color:#333333,font-weight:bold
+    classDef sharedLayer fill:#e0ebeb,stroke:#66b2b2,stroke-width:3px,color:#333333,font-weight:bold
+    classDef entityClass fill:#c6def1,stroke:#3d85c6,stroke-width:2px,color:#333333,font-weight:bold
+    classDef repoClass fill:#d5e1df,stroke:#a2b9bc,stroke-width:2px,color:#333333,font-weight:bold
+    classDef serviceClass fill:#fff2cc,stroke:#d6b656,stroke-width:2px,color:#333333,font-weight:bold
+    classDef dataClass fill:#ead1dc,stroke:#c27ba0,stroke-width:2px,color:#333333,font-weight:bold
+    classDef client fill:#f5f5f5,stroke:#333333,stroke-width:2px,color:#333333,font-weight:bold
+
+    class LoanAPI,AuthMiddleware,ValidationMiddleware,ErrorMiddleware,HealthCheck apiLayer
+    class LoanUC,PaymentCalc appLayer
+    class Entities,Repositories,DomainServices domainLayer
+    class DataAccess infraLayer
+    class Express,App,ModuleReg,PluginReg,TSyringe coreLayer
+    class AuthService,ConfigService,Validator,ErrorHandler,Logger sharedLayer
+    class LoanEntity,CustomerEntity,MoneyVO entityClass
+    class LoanRepI,CustomerRepI,LoanRepImpl,CustomerRepImpl repoClass
+    class LoanService,PaymentCalc serviceClass
+    class PrismaManager,DB dataClass
+    class Client client

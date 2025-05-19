@@ -11,9 +11,13 @@ import {
   LoanApplicationNotFoundError,
 } from '../../shared/errors/domain-errors';
 
-// Helper function for pagination
-interface PaginationParamsInput {
+/**
+ * Interface for pagination parameters input
+ */
+export interface PaginationParamsInput {
+  /** Page number (1-based indexing) */
   page?: number | undefined;
+  /** Number of items per page */
   pageSize?: number | undefined;
 }
 

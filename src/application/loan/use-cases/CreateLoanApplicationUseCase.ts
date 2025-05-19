@@ -9,10 +9,17 @@ import { z } from 'zod';
 import { validate } from '@shared/validation/validator';
 import { isValidUUID } from '@shared/validation/uuid-utils';
 
-interface CreateLoanApplicationRequest {
+/**
+ * Interface representing a loan application creation request
+ */
+export interface CreateLoanApplicationRequest {
+  /** ID of the customer applying for the loan */
   customerId: string;
+  /** Amount of the loan */
   amount: number;
+  /** Loan term in months */
   termMonths: number;
+  /** Annual interest rate (percentage) */
   annualInterestRate: number;
 }
 

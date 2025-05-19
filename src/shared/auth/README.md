@@ -2,70 +2,96 @@
 
 This module implements a flexible authentication system using the Strategy pattern, allowing for different authentication mechanisms to be used interchangeably.
 
-## Current Implementation
+## Table of Contents
 
-The current implementation uses a simple token-based authentication strategy using an environment variable:
+- [Overview](#overview)
+- [Architecture](#architecture)
+- [Current Implementation](#current-implementation)
+- [Security Features](#security-features)
+- [How to Use](#how-to-use)
+- [Adding New Authentication Strategies](#adding-new-authentication-strategies)
+- [Testing Authentication](#testing-authentication)
+- [Security Best Practices](#security-best-practices)
 
-- Token: Set via `API_ACCESS_TOKEN` environment variable
-- Header: `x-access-token`
+## Overview
+
+The authentication module is designed around the Strategy Pattern, making it easy to swap out different authentication mechanisms without changing the consuming code. This approach allows the service to:
+
+- Support multiple authentication mechanisms simultaneously
+- Add new authentication methods without modifying existing code
+- Apply consistent security policies across different authentication strategies
 
 ## Architecture
 
-- `IAuthStrategy`: Interface that all authentication strategies must implement
-- `TokenAuthStrategy`: Implementation of token-based authentication
-- `AuthService`: Service that manages authentication strategies and creates middleware
-- `auth-middleware.ts`: Provides middleware functions for route protection
+The authentication system is built with the following components:
+
+1. **IAuthStrategy Interface** (`auth-strategy.interface.ts`)
+
+   - Core contract that all authentication strategies must implement
+   - Defines the `authenticate` method that verifies credentials
+   - Contains a name property to identify the strategy
+
+2. **TokenAuthStrategy** (`token-auth-strategy.ts`)
+
+   - Implementation of token-based authentication
+   - Validates the `x-access-token` header against configured value
+   - Provides default implementation for the application
+
+3. **AuthService** (`auth-service.ts`)
+
+   - Manages multiple authentication strategies
+   - Creates middleware for Express routes
+   - Allows registration of new strategies at runtime
+
+4. **Auth Middleware** (`auth-middleware.ts`)
+   - Provides ready-to-use middleware functions
+   - Implements global authentication that can be bypassed for specific routes
+   - Contains utilities for working with authentication in routes
+
+## Current Implementation
+
+The current implementation uses a simple token-based authentication strategy:
+
+```typescript
+// Configuration (in environment variables)
+API_ACCESS_TOKEN="your-secure-token-here"
+
+// Header in requests
+x-access-token: your-secure-token-here
+```
+
+### Token Authentication Flow
+
+1. Client includes the token in the `x-access-token` header
+2. The `TokenAuthStrategy` compares the provided token with the environment variable
+3. If matching, the request proceeds; otherwise, a 401 Unauthorized response is returned
 
 ## Security Features
 
-1. **Token-based Authentication**: All API routes are protected by default except for health check endpoints
+The authentication module integrates with several other security features:
+
+1. **Token-based Authentication**:
+
+   - All API routes require authentication by default
+   - Health check endpoints (`/health`) are exempt from authentication
+   - Configurable via environment variables
+
 2. **Rate Limiting**:
+
    - Global rate limiting: 100 requests per 15 minutes per IP
-   - Stricter auth endpoint rate limiting: 5 requests per hour
+   - Authentication endpoint limiting: 5 requests per minute
+   - Helps prevent brute force and DoS attacks
+
 3. **Security Headers**:
+
    - Content Security Policy (CSP)
-   - XSS Protection
-   - Frame protection (deny)
-   - MIME sniffing protection
-   - Hide server information
+   - X-XSS-Protection
+   - X-Frame-Options (deny)
+   - X-Content-Type-Options (nosniff)
+   - Referrer-Policy (no-referrer)
+   - Strict-Transport-Security (HSTS)
+
 4. **CORS Configuration**:
-   - Configurable origins
+   - Configurable allowed origins via `CORS_ORIGINS` environment variable
    - Restricted methods and headers
-   - Credentials support
-
-## Adding New Authentication Strategies
-
-To add a new authentication strategy:
-
-1. Create a new class implementing the `IAuthStrategy` interface
-2. Register the strategy with the `AuthService`
-3. Use the strategy by name when creating middleware
-
-Example:
-
-```typescript
-// 1. Create strategy
-@injectable()
-export class JwtAuthStrategy implements IAuthStrategy {
-  readonly name = 'jwt';
-
-  async authenticate(req: Request, res: Response, next: NextFunction): Promise<void> {
-    // JWT verification logic
-  }
-}
-
-// 2. Register strategy
-const authService = getAuthService();
-authService.registerStrategy(new JwtAuthStrategy());
-
-// 3. Use strategy
-router.get('/protected', authenticate('jwt'), controller.handler);
-```
-
-## Best Practices
-
-- Always use HTTPS in production
-- Rotate tokens/secrets regularly
-- Implement proper logging for security events
-- Consider adding additional security measures like CSRF protection for cookie-based auth
-- Store sensitive values like tokens in environment variables, never hardcode them
+   - Credentials support for authenticated cross-origin requests

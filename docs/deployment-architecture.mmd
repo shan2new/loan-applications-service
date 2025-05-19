@@ -1,0 +1,176 @@
+%% Configuration
+%%{
+  init: {
+    'theme': 'default',
+    'flowchart': {
+      'curve': 'basis',
+      'nodeSpacing': 80,
+      'rankSpacing': 120,
+      'padding': 40
+    },
+    'themeVariables': {
+      'fontSize': '20px',
+      'fontFamily': 'arial',
+      'lineWidth': 3
+    }
+  }
+}%%
+
+flowchart TD
+    %% External Components
+    Developer([Developer])
+    GitHub[(GitHub Repository)]
+    EndUser([End User])
+    Internet((Internet))
+
+    %% AWS Cloud
+    subgraph AWS["AWS Cloud"]
+        %% VPC Setup
+        subgraph VPC["VPC"]
+            IGW[Internet Gateway]
+
+            %% Public Subnets
+            subgraph PublicSubnets["Public Subnets"]
+                ALB[Application Load Balancer]
+                NAT[NAT Gateway]
+            end
+
+            %% Private Subnets - Application
+            subgraph PrivateSubnetsApp["Private Subnets - Application Tier"]
+                EB[Elastic Beanstalk Environment]
+                EC2s[EC2 Instances]
+            end
+
+            %% Private Subnets - Data
+            subgraph PrivateSubnetsData["Private Subnets - Data Tier"]
+                RDS[(RDS PostgreSQL)]
+                SecretsManager[(AWS Secrets Manager)]
+            end
+
+            %% VPC Endpoints
+            subgraph VPCEndpoints["VPC Endpoints"]
+                SSMEndpoint[SSM Endpoint]
+                SSMMessagesEndpoint[SSM Messages Endpoint]
+                EC2MessagesEndpoint[EC2 Messages Endpoint]
+            end
+        end
+
+        %% CI/CD Pipeline
+        subgraph CICDServices["CI/CD Services"]
+            subgraph CodePipeline["AWS CodePipeline"]
+                SourceStage[Source Stage]
+                TestStage[Test Stage]
+                BuildStage[Build Stage]
+                DeployStage[Deploy Stage]
+            end
+
+            subgraph CodeBuildProjects["CodeBuild Projects"]
+                TestProject[Test Project]
+                BuildProject[Build Project]
+            end
+
+            ArtifactBucket[(S3 Artifacts Bucket)]
+            CodeStarConn[CodeStar Connection]
+        end
+
+        %% State Management
+        subgraph StateManagement["Terraform State Management"]
+            StateBucket[(S3 State Bucket)]
+            DynamoDB[(DynamoDB Lock Table)]
+        end
+
+        %% Monitoring
+        subgraph Monitoring["Monitoring Services"]
+            CWLogs[CloudWatch Logs]
+            CWAlarms[CloudWatch Alarms]
+            CWMetrics[CloudWatch Metrics]
+        end
+
+        %% Security
+        subgraph Security["Security & IAM"]
+            IAMRoles[IAM Roles & Policies]
+            SecurityGroups[Security Groups]
+            SSM[SSM Parameter Store]
+        end
+    end
+
+    %% Connections - External to AWS
+    Developer -->|Commits Code| GitHub
+    Developer -.->|Deploy Infrastructure| StateBucket
+    GitHub -->|Source Code| CodeStarConn
+    EndUser -->|HTTPS Requests| Internet
+
+    %% Internet Gateway Connections
+    Internet <-->|Public Traffic| IGW
+    IGW <-->|Public Subnet Traffic| PublicSubnets
+    Internet -->|User Requests| IGW
+    IGW -->|Inbound Traffic| ALB
+    ALB -->|Outbound Responses| IGW
+    NAT -->|Outbound Traffic| IGW
+
+    %% CI/CD Flow
+    CodeStarConn --> SourceStage
+    SourceStage --> TestStage
+    TestStage --> TestProject
+    TestProject --> BuildStage
+    BuildStage --> BuildProject
+    BuildProject --> DeployStage
+    DeployStage -->|Deploy Application| EB
+
+    %% CI/CD Artifacts
+    TestProject -.->|Store Artifacts| ArtifactBucket
+    BuildProject -.->|Store Artifacts| ArtifactBucket
+
+    %% Network Flow
+    ALB --> EC2s
+    EC2s -->|App DB Queries| RDS
+    EC2s --> SSM
+    EC2s -.->|Outbound Traffic| NAT
+
+    %% VPC Endpoints
+    EC2s -.->|Systems Manager Access| SSMEndpoint
+    EC2s -.->|Systems Manager Access| SSMMessagesEndpoint
+    EC2s -.->|Systems Manager Access| EC2MessagesEndpoint
+
+    %% Database & Secrets
+    RDS -.->|Store Credentials| SecretsManager
+    EC2s -->|Retrieve Credentials| SecretsManager
+
+    %% Logging & Monitoring
+    EC2s -->|Instance Logs| CWLogs
+    RDS -->|Database Logs| CWLogs
+    EB -->|Environment Logs| CWLogs
+    TestProject -->|Build Logs| CWLogs
+    BuildProject -->|Build Logs| CWLogs
+    CWLogs -->|Trigger| CWAlarms
+    EC2s -->|Metrics| CWMetrics
+    RDS -->|Metrics| CWMetrics
+    CWMetrics -->|Threshold Breach| CWAlarms
+
+    %% Security Connections
+    EC2s -.->|Assume Role| IAMRoles
+    RDS -.->|Access Policies| IAMRoles
+    ALB -.->|Inbound Rules| SecurityGroups
+    EC2s -.->|Network Rules| SecurityGroups
+    RDS -.->|Network Rules| SecurityGroups
+    EC2s -.->|Env Variables| SSM
+
+    %% Styling
+    classDef subnet fill:#e6f3ff,stroke:#0066cc,stroke-width:3px,color:#000000,font-weight:bold
+    classDef service fill:#f9d5e5,stroke:#d63384,stroke-width:3px,color:#000000,font-weight:bold
+    classDef database fill:#d5e1df,stroke:#2c786c,stroke-width:3px,color:#000000,font-weight:bold
+    classDef security fill:#bdcebe,stroke:#346751,stroke-width:3px,color:#000000,font-weight:bold
+    classDef external fill:#f5f5f5,stroke:#333333,stroke-width:3px,color:#000000,font-weight:bold
+    classDef network fill:#fff2cc,stroke:#d6b656,stroke-width:3px,color:#000000,font-weight:bold
+    classDef storage fill:#ead1dc,stroke:#c27ba0,stroke-width:3px,color:#000000,font-weight:bold
+    classDef monitoring fill:#d0e2f3,stroke:#4285f4,stroke-width:3px,color:#000000,font-weight:bold
+    classDef state fill:#e6e6e6,stroke:#666666,stroke-width:3px,color:#000000,font-weight:bold
+
+    class PublicSubnets,PrivateSubnetsApp,PrivateSubnetsData,VPCEndpoints subnet
+    class ALB,NAT,IGW,EB,EC2s,SSMEndpoint,SSMMessagesEndpoint,EC2MessagesEndpoint network
+    class CodePipeline,CodeBuildProjects,TestProject,BuildProject,SourceStage,TestStage,BuildStage,DeployStage,CodeStarConn service
+    class RDS,SecretsManager database
+    class IAMRoles,SecurityGroups,SSM security
+    class CWLogs,CWAlarms,CWMetrics monitoring
+    class ArtifactBucket,StateBucket,DynamoDB storage
+    class GitHub,Developer,EndUser,Internet external

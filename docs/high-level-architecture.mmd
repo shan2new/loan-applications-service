@@ -1,0 +1,56 @@
+graph TD
+    subgraph "API Layer"
+        API[API Controllers]
+        Auth[Authentication]
+        Val[Validation]
+    end
+
+    subgraph "Application Layer"
+        UC[Use Cases]
+        AS[Application Services]
+    end
+
+    subgraph "Domain Layer"
+        Ent[Entities]
+        VO[Value Objects]
+        DS[Domain Services]
+        Rep_I[Repository Interfaces]
+    end
+
+    subgraph "Infrastructure Layer"
+        Rep_Impl[Repository Implementations]
+        DB[(Database)]
+        Ext[External Services]
+    end
+
+    subgraph "Core System"
+        DI[Dependency Injection]
+        Mod[Module Registry]
+        Plug[Plugin Registry]
+    end
+
+    Client[Client] --> API
+    API --> Auth
+    API --> Val
+    API --> UC
+    UC --> AS
+    AS --> Ent
+    AS --> DS
+    AS --> Rep_I
+    Ent --> VO
+    Rep_I --> Rep_Impl
+    Rep_Impl --> DB
+    Rep_Impl --> Ext
+
+    DI --> API
+    DI --> UC
+    DI --> DS
+    DI --> Rep_Impl
+    Mod --> API
+
+    classDef layer fill:#e6f3ff,stroke:#99c2ff,stroke-width:2px
+    class API,Auth,Val layer
+    class UC,AS layer
+    class Ent,VO,DS,Rep_I layer
+    class Rep_Impl,DB,Ext layer
+    class DI,Mod,Plug layer

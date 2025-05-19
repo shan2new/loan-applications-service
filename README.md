@@ -1,51 +1,146 @@
 # Loan Applications Service
 
-A Node.js backend service for processing loan applications with secure API endpoints.
+A Node.js backend service for processing loan applications with secure API endpoints, built using modern architectural patterns and AWS infrastructure.
+
+## Table of Contents
+
+- [Features](#features)
+- [Architecture Overview](#architecture-overview)
+- [Getting Started](#getting-started)
+- [API Documentation](#api-documentation)
+- [Database Management](#database-management)
+- [AWS Deployment](#aws-deployment)
+- [Security Implementation](#security-implementation)
+- [Extending the Application](#extending-the-application)
+- [Development Practices](#development-practices)
+- [Debugging and Troubleshooting](#debugging-and-troubleshooting)
+- [AI Tools](#ai-tools)
 
 ## Features
 
-- REST API for loan applications
-- PostgreSQL database integration
-- Secure authentication
-- Monthly payment calculation
+- RESTful API for loan applications and customer management
+- Clean Architecture/Domain-Driven Design implementation
+- PostgreSQL database integration with Prisma ORM
+- Secure API endpoints with token-based authentication
+- Financial calculations for loan amortization
+- Modular, extensible design with dependency injection
+- Comprehensive error handling and logging
 - CI/CD pipeline with AWS CodePipeline
+- Infrastructure as Code using Terraform
+- Elastic Beanstalk deployment with private networking
 
-## Overview
+## Architecture Overview
 
-This service manages loan applications processing.
+This service follows modern architectural patterns including Clean Architecture, Domain-Driven Design (DDD), and Hexagonal Architecture (Ports and Adapters).
 
-## Local Development Setup
+For more information about the architecture diagrams and how to update them, see [Architecture Diagrams Documentation](docs/architecture-diagrams.md).
+
+### Architectural Layers
+
+![High-Level Architecture](docs/images/high-level-architecture.png)
+
+#### Detailed Architecture
+
+![Low-Level Architecture](docs/images/low-level-architecture.png)
+
+#### Deployment Architecture
+
+![Deployment Architecture](docs/images/deployment-architecture.png)
+
+1. **Domain Layer** (`/src/domain`)
+
+   - Core business entities, value objects, and repository interfaces
+   - Implements business rules and invariants (e.g., loan calculation)
+   - Pure TypeScript with no external dependencies
+   - Represents the "inner hexagon" in Hexagonal Architecture
+
+2. **Application Layer** (`/src/application`)
+
+   - Orchestrates domain objects to implement business use cases
+   - Defines input/output ports for interacting with the domain
+   - Enforces application-specific validation rules
+   - Implements transaction boundaries and application services
+
+3. **Infrastructure Layer** (`/src/infrastructure`)
+
+   - Provides concrete implementations of repository interfaces
+   - Manages database connections through Prisma ORM
+   - Connects to external services and APIs
+   - Functions as "adapters" in Hexagonal Architecture
+
+4. **API Layer** (`/src/api`)
+   - Exposes HTTP endpoints with Express
+   - Maps between API DTOs and domain objects
+   - Handles authentication and request validation
+   - Functions as "driving adapters" in Hexagonal Architecture
+
+### Core Module System
+
+The application uses a plugin-based architecture with a dependency injection container:
+
+- **ModuleRegistry**: Manages registration and initialization of modules
+- **PluginRegistry**: Supports dynamic loading of plugins
+- **DI Container**: Implemented using TSyringe for dependency injection
+
+### Domain-Driven Design Concepts
+
+- **Entities**: Objects with identity (e.g., `LoanApplication`, `Customer`)
+- **Value Objects**: Immutable objects defined by their attributes (e.g., `MoneyAmount`)
+- **Repositories**: Interfaces for data access with domain-specific methods
+- **Domain Services**: Stateless operations that don't belong to any entity
+- **Aggregates**: Clusters of domain objects treated as a unit (e.g., Loan Application)
+
+## Getting Started
 
 ### Prerequisites
 
-- Node.js (LTS version recommended)
-- npm
-- Python (for pre-commit hooks)
-- AWS CLI
-- Terraform 1.8.x
-- PostgreSQL database
+- Node.js (v20.x LTS recommended)
+- npm (v10.x or newer)
+- PostgreSQL (v15.x or newer)
+- Python 3.x (for pre-commit hooks)
+- AWS CLI (configured with appropriate credentials)
+- Terraform (v1.8.x) for infrastructure deployment
 
-### Getting Started
+### Installation
 
-1. Clone this repository
+1. Clone the repository:
+
+```bash
+git clone https://github.com/your-organization/loan-applications-service.git
+cd loan-applications-service
+```
+
 2. Run the setup script to configure the development environment:
 
 ```bash
+chmod +x setup.sh
 ./setup.sh
 ```
 
-This will install:
+This script installs and configures:
 
+- All npm dependencies
 - TypeScript with strict mode enabled
 - ESLint and Prettier for code quality
-- Husky pre-commit hooks
-- pre-commit hooks for ESLint, Prettier, and Terraform validation
+- Husky for Git hooks
+- pre-commit hooks for linting and Terraform validation
 
 ### Environment Configuration
 
-Copy the `.env.example` file to `.env` and configure the following variables:
+1. Create your environment file:
+
+```bash
+cp .env.example .env
+```
+
+2. Configure the following variables in your `.env` file:
 
 ```
+# Application
+NODE_ENV=development
+PORT=3000
+LOG_LEVEL=debug
+
 # Database settings
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/loan_applications_db?schema=public"
 
@@ -56,243 +151,248 @@ CORS_ORIGINS="http://localhost:3000,https://your-frontend-domain.com"
 
 ### Database Setup
 
-1. Make sure you have a PostgreSQL database running
-2. Update the `.env` file with your database connection string
-3. Run the Prisma migrations to set up your database schema:
+1. Ensure PostgreSQL is running locally
+2. Create your development database:
+
+```bash
+createdb loan_applications_db
+```
+
+3. Run Prisma migrations to set up your schema:
 
 ```bash
 npx prisma migrate dev
 ```
 
+4. (Optional) Seed the database with initial data:
+
+```bash
+npx prisma db seed
+```
+
 ### Running the Service
 
 ```bash
-# Development mode
+# Start in development mode with hot reloading
 npm run dev
 
 # Build the project
 npm run build
 
-# Run in production mode
+# Run tests
+npm run test
+
+# Run in production mode (after building)
 npm run start
 ```
 
-## AWS Deployment
+## API Documentation
 
-### Infrastructure as Code
+> **Authentication**: All API endpoints require the `x-access-token` header with a valid token, except where noted.
 
-This project uses Terraform to provision AWS infrastructure:
+### Health Check Endpoint
 
-1. Set up the Terraform backend:
+- `GET /health` - Service health check (no authentication required)
 
-```bash
-cd terraform
-aws s3 mb s3://loan-application-terraform-state
-aws dynamodb create-table \
-  --table-name terraform-lock \
-  --attribute-definitions AttributeName=LockID,AttributeType=S \
-  --key-schema AttributeName=LockID,KeyType=HASH \
-  --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5
+### Customer Endpoints
+
+| Method | Endpoint             | Description                    |
+| ------ | -------------------- | ------------------------------ |
+| GET    | `/api/customers`     | List all customers (paginated) |
+| GET    | `/api/customers/:id` | Get a customer by ID           |
+| POST   | `/api/customers`     | Create a new customer          |
+| PATCH  | `/api/customers/:id` | Update a customer              |
+| DELETE | `/api/customers/:id` | Delete a customer              |
+
+### Loan Application Endpoints
+
+| Method | Endpoint                                      | Description                            |
+| ------ | --------------------------------------------- | -------------------------------------- |
+| GET    | `/api/loan-applications`                      | List all loan applications (paginated) |
+| GET    | `/api/loan-applications/:id`                  | Get a loan application by ID           |
+| GET    | `/api/loan-applications/customer/:customerId` | Get loan applications by customer ID   |
+| POST   | `/api/loan-applications`                      | Create a new loan application          |
+
+### Request/Response Examples
+
+#### Create Loan Application
+
+Request:
+
+```json
+POST /api/loan-applications
+Content-Type: application/json
+x-access-token: your-api-token
+
+{
+  "customer_id": "uuid-here",
+  "amount": 5000,
+  "term_months": 36,
+  "annual_interest_rate": 5.0
+}
 ```
 
-2. Initialize Terraform:
+Response:
 
-```bash
-terraform init
+```json
+{
+  "data": {
+    "id": "generated-uuid",
+    "customer_id": "uuid-here",
+    "amount": 5000,
+    "term_months": 36,
+    "annual_interest_rate": 5.0,
+    "monthly_payment": 149.85,
+    "created_at": "2023-01-15T08:30:00Z"
+  }
+}
 ```
 
-3. Configure deployment variables:
-
-```bash
-cp terraform.tfvars.example terraform.tfvars
-# Edit terraform.tfvars with your configuration
-```
-
-4. Deploy the infrastructure:
-
-```bash
-terraform apply
-```
-
-### CI/CD Pipeline
-
-The CI/CD pipeline is automatically set up with the Terraform deployment. It includes:
-
-1. Source stage: Pull code from GitHub
-2. Build stage: Run tests and build the application
-3. Deploy stage: Deploy to Elastic Beanstalk
-
-After deployment, you need to manually complete the GitHub connection in the AWS Developer Tools Console.
-
-### API Endpoints
-
-> **Authentication Required**: All API endpoints require the `x-access-token` header with a valid token.
-
-#### Public Endpoints
-
-- `GET /health` - Health check endpoint (no authentication required)
-
-#### Customers
-
-- `GET /api/customers` - List all customers
-- `GET /api/customers/:id` - Get a customer by ID
-- `POST /api/customers` - Create a new customer
-- `PATCH /api/customers/:id` - Update a customer
-- `DELETE /api/customers/:id` - Delete a customer
-
-#### Loan Applications
-
-- `GET /api/loan-applications` - List all loan applications
-- `GET /api/loan-applications/:id` - Get a loan application by ID
-- `GET /api/loan-applications/customer/:customerId` - Get loan applications by customer ID
-- `POST /api/loan-applications` - Create a new loan application
-
-### Prisma Database Management
+## Database Management
 
 The project uses Prisma ORM for database operations and migrations.
 
-#### Available Prisma Commands
+### Database Schema
 
-- `npx prisma migrate dev` - Apply migrations to your local development database
-- `npx prisma migrate deploy` - Apply migrations to production/staging environments
-- `npx prisma db seed` - Seed the database with initial data (if configured)
-- `npx prisma generate` - Generate Prisma Client based on your schema
-- `npx prisma studio` - Open Prisma Studio to view and edit your database data
+The core database schema consists of two main tables:
 
-#### Creating New Migrations
+- `customers`: Stores customer information
+- `loan_applications`: Stores loan application data with a relation to customers
 
-When you make changes to the Prisma schema (`prisma/schema.prisma`), you need to create a new migration:
+See [prisma/schema.prisma](prisma/schema.prisma) for the complete schema definition.
 
-```bash
-npx prisma migrate dev --name descriptive_name_of_your_changes
-```
+### Migration Commands
 
-This command will:
+- **Create and Apply Migrations**:
 
-1. Generate a new SQL migration file
-2. Run the migration against your development database
-3. Regenerate the Prisma Client
+  ```bash
+  npx prisma migrate dev --name descriptive_name
+  ```
 
-### Available Scripts
+- **Apply Migrations in Production**:
 
-- `npm run build` - Build the TypeScript project
-- `npm run lint` - Run ESLint on the codebase
-- `npm run lint:fix` - Fix ESLint issues automatically
-- `npm run format` - Format code with Prettier
+  ```bash
+  npx prisma migrate deploy
+  ```
 
-### Project Structure
+- **View Database with Prisma Studio**:
+  ```bash
+  npx prisma studio
+  ```
 
-```
-├── .husky/                 # Git hooks with Husky
-├── prisma/                 # Prisma ORM schema and migrations
-│   ├── schema.prisma       # Database schema definition
-│   └── migrations/         # Database migrations
-├── src/                    # TypeScript source code
-├── terraform/              # Terraform infrastructure as code
-├── .editorconfig           # Editor configuration
-├── .eslintrc.json          # ESLint configuration
-├── .gitignore              # Git ignore rules
-├── .npmrc                  # npm configuration
-├── .pre-commit-config.yaml # pre-commit hooks configuration
-├── .prettierrc             # Prettier configuration
-├── package.json            # Project dependencies and scripts
-├── setup.sh                # Setup script
-└── tsconfig.json           # TypeScript configuration with strict mode
-```
+### Best Practices
 
-## Toolchain
+1. Always use migrations for schema changes
+2. Include meaningful names for migrations
+3. Test migrations on non-production environments first
+4. Back up the database before applying migrations to production
 
-- TypeScript with strict mode
-- AWS CLI for AWS interactions
-- Terraform 1.8.x for infrastructure as code
-- ESLint and Prettier for code quality
-- Husky for Git hooks
-- pre-commit for additional hooks
-- Prisma ORM for database operations
+## AWS Deployment
 
-## Architecture
+### Infrastructure Components
 
-This service follows a modular monolith architecture with clear separation of concerns:
+The AWS infrastructure for this service includes:
 
-### Layers
+- **Elastic Beanstalk**: Hosting the Node.js application
+- **RDS PostgreSQL**: Database instance in a private subnet
+- **VPC**: Custom VPC with public and private subnets
+- **CodePipeline**: CI/CD pipeline for automated deployments
+- **SSM Parameter Store**: Secure storage for configuration values
+- **IAM Roles**: Least-privilege access for all components
 
-1. **Domain Layer** (`/src/domain`)
+### Deployment with Terraform
 
-   - Contains entities, value objects, and repository interfaces
-   - Represents the core business concepts and rules
-   - No dependencies on other layers
+1. Navigate to the Terraform directory:
 
-2. **Application Layer** (`/src/application`)
+   ```bash
+   cd terraform
+   ```
 
-   - Contains use cases that implement business logic
-   - Depends on the domain layer
-   - No dependencies on infrastructure or API layers
+2. Set up the Terraform backend (one-time):
 
-3. **Infrastructure Layer** (`/src/infrastructure`)
+   ```bash
+   aws s3 mb s3://loan-application-terraform-state
+   aws dynamodb create-table \
+     --table-name terraform-lock \
+     --attribute-definitions AttributeName=LockID,AttributeType=S \
+     --key-schema AttributeName=LockID,KeyType=HASH \
+     --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5
+   ```
 
-   - Contains implementations of repository interfaces
-   - Database access using Prisma ORM
-   - External services integration
+3. Initialize Terraform:
 
-4. **API Layer** (`/src/api`)
-   - Contains controllers and DTOs
-   - Handles HTTP requests and responses
-   - Routes to appropriate use cases
+   ```bash
+   terraform init
+   ```
 
-### Security Implementation
+4. Configure deployment variables:
 
-The service implements a comprehensive security approach:
+   ```bash
+   cp terraform.tfvars.example terraform.tfvars
+   # Edit terraform.tfvars with your specific configuration
+   ```
 
-1. **Authentication**
+5. Plan and apply changes:
+   ```bash
+   terraform plan
+   terraform apply
+   ```
 
-   - Strategy pattern for flexible authentication mechanisms
-   - Token-based authentication (current implementation)
-   - Protected API routes by default
-   - See `/src/shared/auth/README.md` for details
+### CI/CD Pipeline Configuration
 
-2. **API Security**
+The CI/CD pipeline is automatically set up with Terraform and includes:
 
-   - Rate limiting (global and per-endpoint)
-   - Security headers with Content Security Policy
-   - CORS protection with configurable origins
-   - Input validation using Zod
+1. **Source Stage**: Connects to your GitHub repository
+2. **Build Stage**:
 
-3. **Environment Configuration**
-   - Strong typing with validation
-   - Secure defaults
-   - Environment-specific settings
+   - Runs tests
+   - Performs static code analysis
+   - Builds the application
+   - Generates deployment artifacts
 
-### Modular Structure
+3. **Deploy Stage**:
+   - Deploys to Elastic Beanstalk
+   - Runs database migrations
+   - Performs health checks
 
-The application uses a plugin-based architecture for modularity:
+After initial deployment, you'll need to manually authorize the GitHub connection in the AWS Developer Tools Console.
 
-- **Core** (`/src/core`)
+## Security Implementation
 
-  - Base application setup and module registration
-  - Dependency injection container (using tsyringe)
-  - Plugin system for dynamic module loading
+### Authentication
 
-- **Modules** (`/src/modules`)
+The service uses a flexible authentication system based on the Strategy pattern:
 
-  - Each module is a self-contained feature area (e.g., Loans, Credit Cards)
-  - Modules register their own dependencies and routes
-  - Can be added or removed without affecting other modules
+- Current implementation: Token-based authentication
+- Easily extensible for JWT, OAuth, or other mechanisms
+- See [src/shared/auth/README.md](src/shared/auth/README.md) for details
 
-- **Shared** (`/src/shared`)
-  - Common utilities, error handling, logging, etc.
-  - Used across multiple modules
+### API Security Measures
+
+- **Rate Limiting**: Prevents abuse and DoS attacks
+- **CORS Protection**: Configurable allowed origins
+- **Security Headers**: Comprehensive Helmet.js configuration
+- **Input Validation**: Schema validation with Zod
+- **Parameterized Queries**: Prevents SQL injection via Prisma
+
+### Infrastructure Security
+
+- **Private Subnets**: Database and application instances in private subnets
+- **Security Groups**: Tight network controls for all components
+- **Least Privilege**: IAM roles with minimal necessary permissions
+- **Secrets Management**: Environment variables stored in SSM Parameter Store
+- **HTTPS**: All production endpoints require HTTPS
 
 ## Extending the Application
 
 ### Adding a New Module
 
-1. Create a new directory under `/src/modules/[your-module-name]`
-2. Create a module class that extends `BaseModule`
-3. Implement the required methods:
-   - `registerDependencies`
-   - `registerRoutes`
-   - `initialize` (optional)
-4. Register your module in `src/index.ts`
+The service follows a modular architecture. To add a new feature module:
+
+1. Create a directory structure within `src/modules/[module-name]/`
+2. Implement the necessary domain, application, and infrastructure components
+3. Create a module class that extends `BaseModule`
+4. Register the module in `src/index.ts`
 
 Example:
 
@@ -307,24 +407,27 @@ export class CreditCardModule extends BaseModule {
   readonly name = 'credit-card';
 
   registerDependencies(container: DependencyContainer): void {
-    // Register your dependencies
+    // Register repositories, services, controllers
   }
 
   registerRoutes(app: Express): void {
     const router = Router();
-    // Register your routes
+    // Configure routes
     app.use('/api', router);
   }
 
   async initialize(): Promise<void> {
-    // Initialize your module
+    // Initialization logic
   }
 }
+
+// src/index.ts
+app.registerModules([LoanModule, CreditCardModule]);
 ```
 
 ### Using the Plugin System
 
-Alternatively, you can use the plugin system to dynamically load modules:
+For dynamically loadable modules, use the plugin system:
 
 ```typescript
 // src/modules/credit-card/credit-card.plugin.ts
@@ -333,95 +436,171 @@ import { CreditCardModule } from './credit-card.module';
 
 createPlugin(() => new CreditCardModule(), {
   name: 'credit-card',
-  description: 'Credit card management module',
+  description: 'Credit card management functionality',
   version: '1.0.0',
-  author: 'Your Name',
 });
 ```
 
-## Debugging Private EC2 Instances with SSM
+## Development Practices
 
-This project is configured with AWS Systems Manager (SSM) for debugging Elastic Beanstalk instances in private subnets.
+### Code Quality Tools
 
-### Prerequisites
+- **TypeScript**: Strict mode with comprehensive type checking
+- **ESLint**: Enforces code quality rules
+- **Prettier**: Ensures consistent code formatting
+- **Husky**: Runs checks on Git operations
+- **pre-commit**: Additional pre-commit hooks
 
-1. Install the AWS CLI and Session Manager plugin:
+### Testing
 
-   ```bash
-   # macOS (with Homebrew)
-   brew install awscli
-   brew install session-manager-plugin
+The project uses Jest for testing with a focus on:
 
-   # Linux
-   curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/linux_64bit/session-manager-plugin.rpm" -o "session-manager-plugin.rpm"
-   sudo yum install -y session-manager-plugin.rpm
-   ```
+- Unit tests for domain logic
+- Integration tests for repositories
+- API tests for endpoints
 
-2. Ensure you have the appropriate IAM permissions to use SSM.
+To run tests:
 
-### Connecting to Instances
+```bash
+# Run all tests
+npm test
 
-1. List the available EC2 instances in your environment:
+# Run with coverage
+npm run test:coverage
+
+# Run in watch mode during development
+npm run test:watch
+```
+
+### Logging
+
+The service uses Pino for structured JSON logging:
+
+- **Development**: Human-readable logs with pino-pretty
+- **Production**: JSON logs for easy ingestion into monitoring systems
+- **Request Context**: Request IDs propagated through the application
+- **Sensitive Data**: Automatically redacted from logs
+
+## Debugging and Troubleshooting
+
+### Local Debugging
+
+- Use the `debug` npm package for detailed logs
+- Run with Node.js inspector for breakpoints:
+  ```bash
+  node --inspect -r ts-node/register src/index.ts
+  ```
+
+### Debugging Deployed Instances
+
+The service is configured with AWS Systems Manager for remote debugging:
+
+1. List instances:
 
    ```bash
    aws ec2 describe-instances \
      --filters "Name=tag:elasticbeanstalk:environment-name,Values=loan-apps-svc-dev" \
-     --query "Reservations[*].Instances[*].[InstanceId,PrivateIpAddress,Tags[?Key=='Name'].Value|[0]]" \
-     --output table
+     --query "Reservations[*].Instances[*].[InstanceId]" \
+     --output text
    ```
 
-2. Start an SSM session with a specific instance:
+2. Connect via SSM:
 
    ```bash
    aws ssm start-session --target i-instanceid
    ```
 
-3. Execute a specific command on the instance:
+3. View common log files:
+
    ```bash
-   aws ssm start-session \
-     --target i-instanceid \
-     --document-name AWS-RunShellScript \
-     --parameters 'commands=["cd /var/app/current && npm list"]'
+   # Application logs
+   tail -f /var/log/nodejs/nodejs.log
+
+   # Elastic Beanstalk logs
+   tail -f /var/log/eb-activity.log
    ```
 
-### Common Debugging Commands
+### Common Issues and Solutions
 
-Once connected to an instance via SSM, you can use these commands for debugging:
+- **Database Connection Issues**: Check security groups and network ACLs
+- **Authentication Failures**: Verify the API_ACCESS_TOKEN is set correctly
+- **Deployment Failures**: Check CodePipeline logs for specific errors
+- **Performance Issues**: Review database query patterns and indexes
 
-```bash
-# View application logs
-cd /var/log/eb-activity.log
-tail -f /var/log/eb-activity.log
+# AI Tools Used in This Project
 
-# View Node.js application logs
-cd /var/log/nodejs
-cat nodejs.log
+This document outlines the artificial intelligence (AI) tools that were utilized during the development of the Loan Applications Service. These tools helped streamline development, enhance code quality, and accelerate the implementation of various features.
 
-# Check the deployed application
-cd /var/app/current
-ls -la
+## Overview of AI Tools
 
-# Check environment variables
-printenv | grep -v AWS_ | grep -v SECRET
+The following AI tools were strategically employed for different aspects of the project development:
 
-# Test database connectivity
-nc -zv $(echo $DATABASE_URL | cut -d'@' -f2 | cut -d':' -f1) $(echo $DATABASE_URL | cut -d':' -f4 | cut -d'/' -f1)
+### Cursor with Auto Mode
 
-# Check if the application is running
-ps aux | grep node
+**Purpose**: General code development and implementation
 
-# View SSM agent logs
-tail -f /var/log/amazon/ssm/amazon-ssm-agent.log
-```
+**Usage in this project**:
 
-### Viewing Extended Debug Logs
+- Writing boilerplate code for service classes and repositories
+- Implementing standard patterns and architectural components
+- Generating TypeScript interfaces and types
+- Creating unit and integration tests
+- Implementing validation logic
 
-Custom debug logs are automatically collected and can be viewed:
+Cursor's Auto mode was particularly helpful for maintaining consistency across the codebase and implementing Clean Architecture patterns efficiently.
 
-```bash
-# View the comprehensive debug log
-cat /var/log/eb-debug.log
+### Cursor with Claude 3.7 Sonnet (Anthropic)
 
-# Check if SSM agent is installed and running properly
-systemctl status amazon-ssm-agent
-```
+**Purpose**: Complex code changes and thorough code reviews
+
+**Usage in this project**:
+
+- Implementing the complex domain logic for loan calculations
+- Refactoring large components to improve maintainability
+- Creating and optimizing database migration scripts
+- Conducting detailed code reviews to ensure compliance with best practices
+- Implementing architectural diagrams using Mermaid
+- Handling intricate TypeScript type definitions and generics
+
+Claude 3.7 Sonnet was invaluable for tasks that required deep understanding of the codebase and careful consideration of design choices, particularly when implementing the core business logic.
+
+### ChatGPT with o4-mini (OpenAI)
+
+**Purpose**: Brainstorming ideas and researching tools/libraries
+
+**Usage in this project**:
+
+- Exploring suitable npm packages and libraries for specific requirements
+- Brainstorming architectural approaches and design patterns
+- Researching AWS infrastructure best practices
+- Finding solutions to technical challenges and debugging issues
+- Evaluating alternative implementation approaches
+
+The o4-mini model proved effective for quick ideation and gathering information about potential tools and approaches without requiring extensive context about the entire codebase.
+
+## AI-Assisted Development Approach
+
+Throughout this project, these AI tools were used as augmentative assistants rather than replacements for human engineering judgment. All code suggestions and architectural recommendations from AI tools were carefully reviewed and adapted before implementation.
+
+Key principles followed when using AI tools:
+
+- Maintain security best practices by not sharing sensitive information
+- Verify all generated code against project requirements
+- Ensure performance and maintainability of AI-suggested implementations
+- Adapt AI suggestions to align with the project's established patterns and standards
+
+## Benefits Realized
+
+The strategic use of these AI tools contributed to the project in several ways:
+
+- Accelerated implementation of standard components
+- Improved code quality through AI-assisted reviews
+- Reduced boilerplate coding time
+- Enhanced architectural consistency
+- Facilitated exploration of alternative approaches
+
+# Challenges Faced
+
+- High probability of random syntax / linter issues
+- Ocassionally diverges from the mentione approach, despite explicitly mentioning.
+- Adds unecessary code without explicit confirmation
